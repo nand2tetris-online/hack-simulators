@@ -1,6 +1,16 @@
 import React, { useEffect, useState } from 'react'
+import { HDLTokenizer } from './lib/HDLTokenizer'
 
-import Actions from './Actions'
+export type ActionsProps = { setHDLFile: (_: File | null) => void }
+export function Actions({ setHDLFile }: ActionsProps) {
+  return (
+    <div>
+      <label>Load Chip
+        <input type="file" accept=".hdl" onChange={(e) => setHDLFile(e.target.files?.item(0) ?? null)} />
+      </label>
+    </div>
+  )
+}
 
 export type ChipNameProps = { name: string | null }
 export function ChipName ({ name }: ChipNameProps) {
@@ -32,8 +42,13 @@ export default function HardwareSimulator() {
 
   useEffect(() => {
     if (!hdl) { return }
-    console.log(hdl)
+
     // setGate(getGateClassFromHDL(hdl))
+    const tokenizer = new HDLTokenizer(hdl)
+    while (tokenizer.hasMoreTokens()) {
+      tokenizer.advance()
+      console.log(tokenizer.token, tokenizer.tokenType)
+    }
   }, [hdl])
 
   return (
