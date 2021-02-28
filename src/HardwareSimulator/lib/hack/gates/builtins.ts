@@ -35,16 +35,21 @@ export class Node {
     }
 }
 
-export class Gate {
+export abstract class Gate {
     gateClass: GateClass
     inputPins: Node[]
     outputPins: Node[]
+    isDirty: boolean
 
     constructor(inputPins: Node[], outputPins: Node[], gateClass: GateClass) {
         this.inputPins = inputPins
         this.outputPins = outputPins
         this.gateClass = gateClass
+
+        this.isDirty = false
     }
+
+    abstract reCompute(): void
 
     getNode(name: string): Node | null {
         const type = this.gateClass.getPinType(name)
@@ -57,9 +62,21 @@ export class Gate {
         }
         return null
     }
+
+    eval() {
+        if (this.isDirty) {
+            this.doEval()
+        }
+    }
+    
+    doEval() {
+        this.reCompute()
+    }
 }
 
-export class BuiltInGate extends Gate {}
+export class BuiltInGate extends Gate {
+    reCompute() {}
+}
 
 export class Nand extends BuiltInGate {
     reCompute() {

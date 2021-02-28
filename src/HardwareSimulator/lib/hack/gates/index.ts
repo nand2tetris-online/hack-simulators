@@ -77,6 +77,7 @@ export type PinInfo = {
   name: string
   width: number
 }
+
 export type Connection = {
   type: ConnectionType
   gatePinNumber: number
@@ -124,6 +125,18 @@ export class BuiltInGateClass extends GateClass {
 }
 
 export class CompositeGate extends Gate {
+  parts: Gate[]
+
+  constructor(inputPins: Node[], outputPins: Node[], gateClass: GateClass, parts: Gate[]) {
+    super(inputPins, outputPins, gateClass)
+    this.parts = parts
+  }
+
+  reCompute() {
+    for (let part of this.parts) {
+      part.eval()
+    }
+  }
 }
 
 export class CompositeGateClass extends GateClass {
@@ -143,21 +156,16 @@ export class CompositeGateClass extends GateClass {
   newInstance(): Gate {
     // create gates from parts
     const parts: Gate[] = []
-    console.log('newInstance 1', this.partsList)
 
     this.partsList.forEach((partClass, i) => {
       parts.push(partClass.newInstance())
     })
 
-    console.log('newInstance 2')
-
     const inputNodes: Node[] = this.inputPinsInfo.map((_) => new Node())
     const outputNodes: Node[] = this.outputPinsInfo.map((_) => new Node())
 
-    console.log('newInstance 3')
-
     // First scan
-    const connections: Set<Connection> = new Set()
+    // const connections: Set<Connection> = new Set()
     let partNode: Node | null = null
     for (let connection of this.connections) {
       partNode = parts[connection.partNumber].getNode(connection.partPinName)
@@ -173,15 +181,13 @@ export class CompositeGateClass extends GateClass {
       }
     }
 
-    const result = new CompositeGate(inputNodes, outputNodes, this)
-
-    console.log(inputNodes, outputNodes, connections, partNode)
+    const result = new CompositeGate(inputNodes, outputNodes, this, parts)
 
     return result
   }
 
   connectGateToPart(source: Node, target: Node) {
-    console.log(`Connecting ${source} to ${target}`)
+    source.addListener(target)
   }
 
   readParts(input: HDLTokenizer) {

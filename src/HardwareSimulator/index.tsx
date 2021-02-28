@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { GateClass, getGateClassHDL } from './lib/hack/gates'
+import { getGateClassHDL } from './lib/hack/gates'
 import { Gate } from './lib/hack/gates/builtins'
 
 export type ActionsProps = { setHDLFile: (_: File | null) => void }
@@ -32,7 +32,6 @@ export default function HardwareSimulator() {
   const [hdlFile, setHDLFile] = useState<File | null>(null)
   const [hdl, setHDL] = useState<string | null>(null)
   const [status, setStatus] = useState<string | null>(null)
-  const [gateClass, setGateClass] = useState<GateClass | null>(null)
   const [gate, setGate] = useState<Gate | null>(null)
 
   // load and set hdl file contents
@@ -40,7 +39,6 @@ export default function HardwareSimulator() {
     (async () => {
       if (!hdlFile) { return }
       setHDL(await hdlFile.text())
-      setStatus('Loaded successfully!')
     })()
   }, [hdlFile])
 
@@ -50,8 +48,8 @@ export default function HardwareSimulator() {
 
     try {
       const aGateClass = getGateClassHDL(hdl)
-      setGateClass(aGateClass)
       setGate(aGateClass.newInstance())
+      setStatus('Loaded successfully!')
     } catch (error) {
       setStatus(`${error}`)
     }
@@ -59,7 +57,7 @@ export default function HardwareSimulator() {
 
   // bind gate to UI
   useEffect(() => {
-    console.log(gate)
+    console.log(gate?.gateClass)
   }, [gate])
 
   return (
