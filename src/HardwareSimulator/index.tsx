@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
-import { getGateClassHDL } from './lib/hack/gates'
+import { GateClass, getGateClassHDL } from './lib/hack/gates'
+import { Gate } from './lib/hack/gates/builtins'
 
 export type ActionsProps = { setHDLFile: (_: File | null) => void }
 export function Actions({ setHDLFile }: ActionsProps) {
@@ -14,24 +15,27 @@ export function Actions({ setHDLFile }: ActionsProps) {
 
 export type ChipNameProps = { name: string | null }
 export function ChipName ({ name }: ChipNameProps) {
-  return <div>Chip Name: {name}</div>
+  return (<div>Chip Name: {name}</div>)
 }
 
 export type HDLViewerProps = { hdl: string | null }
 export function HDLViewer ({ hdl }: HDLViewerProps) {
-  return <pre>{hdl}</pre>
+  return (<pre>{hdl}</pre>)
 }
 
 export type StatusMessageProps = { status: string | null }
 export function StatusMessage ({ status }: StatusMessageProps) {
-  return <div>{status}</div>
+  return (<div>{status}</div>)
 }
 
 export default function HardwareSimulator() {
   const [hdlFile, setHDLFile] = useState<File | null>(null)
   const [hdl, setHDL] = useState<string | null>(null)
   const [status, setStatus] = useState<string | null>(null)
+  const [gateClass, setGateClass] = useState<GateClass | null>(null)
+  const [gate, setGate] = useState<Gate | null>(null)
 
+  // load and set hdl file contents
   useEffect(() => {
     (async () => {
       if (!hdlFile) { return }
@@ -40,16 +44,23 @@ export default function HardwareSimulator() {
     })()
   }, [hdlFile])
 
+  // parse hdl file contents into gate
   useEffect(() => {
     if (!hdl) { return }
 
     try {
-      console.log(getGateClassHDL(hdl))
-      // setGate(getGateClassFromHDL(hdl))
+      const aGateClass = getGateClassHDL(hdl)
+      setGateClass(aGateClass)
+      setGate(aGateClass.newInstance())
     } catch (error) {
       setStatus(`${error}`)
     }
   }, [hdl])
+
+  // bind gate to UI
+  useEffect(() => {
+    console.log(gate)
+  }, [gate])
 
   return (
     <div>

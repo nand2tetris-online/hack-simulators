@@ -1,5 +1,5 @@
 import { HDLTokenizer, TokenType } from "../../HDLTokenizer"
-import builtins, { BuiltInGate } from "./builtins"
+import builtins, { BuiltInGate, Gate, Node } from "./builtins"
 
 export enum PinType {
   INPUT = "INPUT",
@@ -13,7 +13,7 @@ export enum ConnectionType {
   INVALID = "INVALID"
 }
 
-export class GateClass {
+export abstract class GateClass {
   namesToTypes: { [_: string]: PinType }
   namesToNumbers: { [_: string]: number }
 
@@ -33,6 +33,8 @@ export class GateClass {
     this.outputPinsInfo = outputPinsInfo
     this.registerPins(outputPinsInfo, PinType.OUTPUT)
   }
+
+  abstract newInstance(): Gate
 
   getPinInfo(pinType: PinType, pinNumber: number): PinInfo | null {
     switch (pinType) {
@@ -57,6 +59,7 @@ export class GateClass {
   getPinNumber(pinName: string): number {
     return this.namesToNumbers[pinName] ?? -1
   }
+
 
   private registerPins(pinInfos: PinInfo[], type: PinType) {
     pinInfos.forEach((pinInfo, i) => {
@@ -109,6 +112,18 @@ export class BuiltInGateClass extends GateClass {
       input.fail("Missing '}'")
     }
   }
+
+  newInstance(): Gate {
+    const inputNodes: Node[] = this.inputPinsInfo.map((_) => new Node())
+    const outputNodes: Node[] = this.outputPinsInfo.map((_) => new Node())
+
+    const result = new this.tsClassName(inputNodes, outputNodes, this)
+
+    return result
+  }
+}
+
+export class CompositeGate extends Gate {
 }
 
 export class CompositeGateClass extends GateClass {
@@ -123,6 +138,50 @@ export class CompositeGateClass extends GateClass {
     this.connections = new Set()
 
     this.readParts(input)
+  }
+
+  newInstance(): Gate {
+    // create gates from parts
+    const parts: Gate[] = []
+    console.log('newInstance 1', this.partsList)
+
+    this.partsList.forEach((partClass, i) => {
+      parts.push(partClass.newInstance())
+    })
+
+    console.log('newInstance 2')
+
+    const inputNodes: Node[] = this.inputPinsInfo.map((_) => new Node())
+    const outputNodes: Node[] = this.outputPinsInfo.map((_) => new Node())
+
+    console.log('newInstance 3')
+
+    // First scan
+    const connections: Set<Connection> = new Set()
+    let partNode: Node | null = null
+    for (let connection of this.connections) {
+      partNode = parts[connection.partNumber].getNode(connection.partPinName)
+      if (!partNode) { continue }
+
+      switch (connection.type) {
+        case ConnectionType.FROM_INPUT:
+          this.connectGateToPart(inputNodes[connection.gatePinNumber], partNode)
+          break
+        case ConnectionType.TO_OUTPUT:
+          this.connectGateToPart(outputNodes[connection.gatePinNumber], partNode)
+          break
+      }
+    }
+
+    const result = new CompositeGate(inputNodes, outputNodes, this)
+
+    console.log(inputNodes, outputNodes, connections, partNode)
+
+    return result
+  }
+
+  connectGateToPart(source: Node, target: Node) {
+    console.log(`Connecting ${source} to ${target}`)
   }
 
   readParts(input: HDLTokenizer) {

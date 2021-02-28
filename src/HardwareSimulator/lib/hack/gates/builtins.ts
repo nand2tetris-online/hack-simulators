@@ -1,28 +1,65 @@
-import { GateClass } from "."
+import { GateClass, PinType } from "."
 
 export class Node {
     value: number = 0
+
+    protected listeners: Set<Node> | null = null
 
     get() {
         return this.value
     }
 
     set(value: number) {
-        this.value = value
+        if (value !== this.value) {
+            this.value = value
+
+            if (this.listeners) {
+                for (let listener of this.listeners) {
+                    listener.set(this.get())
+                }
+            }
+        }
+    }
+
+    addListener(node: Node) {
+        if (!this.listeners) { 
+            this.listeners = new Set()
+        }
+        this.listeners.add(node)
+    }
+
+    removeListener(node: Node) {
+        if (this.listeners) {
+            this.listeners.delete(node)
+        }
     }
 }
 
-export class BuiltInGate {
+export class Gate {
+    gateClass: GateClass
     inputPins: Node[]
     outputPins: Node[]
-    gateClass: GateClass
-    
+
     constructor(inputPins: Node[], outputPins: Node[], gateClass: GateClass) {
         this.inputPins = inputPins
         this.outputPins = outputPins
         this.gateClass = gateClass
     }
+
+    getNode(name: string): Node | null {
+        const type = this.gateClass.getPinType(name)
+        const index = this.gateClass.getPinNumber(name)
+        switch (type) {
+            case PinType.INPUT:
+                return this.inputPins[index]
+            case PinType.OUTPUT:
+                return this.outputPins[index]
+        }
+        return null
+    }
 }
+
+export class BuiltInGate extends Gate {}
 
 export class Nand extends BuiltInGate {
     reCompute() {
