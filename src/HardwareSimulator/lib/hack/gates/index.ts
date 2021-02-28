@@ -1,4 +1,5 @@
 import { HDLTokenizer, TokenType } from "../../HDLTokenizer"
+import builtins, { BuiltInGate } from "./builtins"
 
 export enum PinType {
   INPUT = "INPUT",
@@ -27,7 +28,10 @@ export class GateClass {
     this.namesToNumbers = {}
 
     this.inputPinsInfo = inputPinsInfo
+    this.registerPins(inputPinsInfo, PinType.INPUT)
+
     this.outputPinsInfo = outputPinsInfo
+    this.registerPins(outputPinsInfo, PinType.OUTPUT)
   }
 
   getPinInfo(pinType: PinType, pinNumber: number): PinInfo | null {
@@ -78,6 +82,33 @@ export type Connection = {
 }
 
 export class BuiltInGateClass extends GateClass {
+  tsClassName: typeof BuiltInGate
+
+  constructor(name: string, input: HDLTokenizer, inputPinsInfo: PinInfo[], outputPinsInfo: PinInfo[]) {
+    super(name, inputPinsInfo, outputPinsInfo)
+
+    // read typescript class name
+    input.advance()
+    if (input.tokenType !== TokenType.IDENTIFIER) {
+      input.fail("Missing typescript class name")
+    }
+
+    // TODO: support more than NAND
+    this.tsClassName = builtins.NAND.gate
+
+    // read ';' symbol
+    input.advance()
+    // @ts-ignore
+    if (input.tokenType !== TokenType.SEMICOLON) {
+      input.fail("Missing ';'")
+    }
+
+    // read ';' symbol
+    input.advance()
+    if (input.tokenType !== TokenType.RBRACE) {
+      input.fail("Missing '}'")
+    }
+  }
 }
 
 export class CompositeGateClass extends GateClass {
@@ -101,15 +132,15 @@ export class CompositeGateClass extends GateClass {
       input.advance()
 
       // check if end of hdl
-      if (input.tokenType === TokenType.SEMICOLON) {
+      if (input.tokenType === TokenType.RBRACE) {
         endOfParts = true
       } else {
         // read partName
         if (input.tokenType !== TokenType.IDENTIFIER) {
           input.fail("A GateClass name is expected")
         }
-        const partName = input.token ?? ''
 
+        const partName = input.token ?? ''
         const gateClass = getGateClassBuiltIn(partName)
         const partNumber = this.partsList.length
         this.partsList.push(gateClass)
@@ -129,12 +160,16 @@ export class CompositeGateClass extends GateClass {
           input.fail("Missing ';'")
         }
       }
-      if (!endOfParts) {
-        input.fail("Missing ')'")
-      }
-      if (input.hasMoreTokens()) {
-        input.fail("Expected EOF after '}'")
-      }
+    }
+
+    if (!endOfParts) {
+      input.fail("Missing '}'")
+    }
+
+    // expect EOF
+    input.advance()
+    if (input.hasMoreTokens()) {
+      input.fail("Expected EOF after '}'")
     }
   }
 
@@ -172,8 +207,6 @@ export class CompositeGateClass extends GateClass {
         input.fail("Missing ',' or ')'")
       }
     }
-
-    console.log(this.connections)
   }
 
   addConnection(input: HDLTokenizer, partName: string, partNumber: number, leftName: string, rightName: string) {
@@ -183,7 +216,7 @@ export class CompositeGateClass extends GateClass {
     if (leftType === PinType.UNKNOWN) {
       input.fail(`${leftName} is not a pin in ${partName}`)
     }
-    const leftNumber = partGateClass.getPinNumber(leftName)
+    // const leftNumber = partGateClass.getPinNumber(leftName)
     // const leftPinInfo = partGateClass.getPinInfo(leftType, leftNumber)
 
     const rightType = this.getPinType(rightName)
@@ -221,7 +254,11 @@ export function getGateClassHDL(hdl: string): GateClass | never {
 }
 
 export function getGateClassBuiltIn(name: string): GateClass | never {
-  return new BuiltInGateClass(name, [], [])
+  // TODO: support more than Nand
+  if (name !== "Nand") {
+    HDLTokenizer.fail(`Unknown part type ${name}`)
+  }
+  return readHDL(new HDLTokenizer(builtins.NAND.hdl))
 }
 
 export function readHDL(input: HDLTokenizer): GateClass | never {
@@ -256,7 +293,7 @@ export function readHDL(input: HDLTokenizer): GateClass | never {
 
   // read BUILTIN or PARTS
   if (input.tokenType === TokenType.BUILTIN) {
-    return new BuiltInGateClass(gateName, inputPinsInfo, outputPinsInfo)
+    return new BuiltInGateClass(gateName, input, inputPinsInfo, outputPinsInfo)
   } else if (input.tokenType === TokenType.PARTS) {
     // read :
     input.advance()

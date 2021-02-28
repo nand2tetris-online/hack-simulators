@@ -122,6 +122,10 @@ export class HDLTokenizer {
   }
 
   fail (message: string): never {
+    HDLTokenizer.fail(message)
+  }
+
+  static fail (message: string): never {
     throw new HDLError(message)
   }
 
