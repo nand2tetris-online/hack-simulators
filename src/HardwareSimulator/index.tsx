@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { HDLTokenizer } from './lib/HDLTokenizer'
+import { getGateClassHDL } from './lib/hack/gates'
 
 export type ActionsProps = { setHDLFile: (_: File | null) => void }
 export function Actions({ setHDLFile }: ActionsProps) {
@@ -43,11 +43,11 @@ export default function HardwareSimulator() {
   useEffect(() => {
     if (!hdl) { return }
 
-    // setGate(getGateClassFromHDL(hdl))
-    const tokenizer = new HDLTokenizer(hdl)
-    while (tokenizer.hasMoreTokens()) {
-      tokenizer.advance()
-      console.log(tokenizer.token, tokenizer.tokenType)
+    try {
+      console.log(getGateClassHDL(hdl))
+      // setGate(getGateClassFromHDL(hdl))
+    } catch (error) {
+      setStatus(`${error}`)
     }
   }, [hdl])
 
