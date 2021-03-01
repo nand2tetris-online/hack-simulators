@@ -176,7 +176,7 @@ export class CompositeGateClass extends GateClass {
           this.connectGateToPart(inputNodes[connection.gatePinNumber], partNode)
           break
         case ConnectionType.TO_OUTPUT:
-          this.connectGateToPart(outputNodes[connection.gatePinNumber], partNode)
+          this.connectGateToPart(partNode, outputNodes[connection.gatePinNumber])
           break
       }
     }
@@ -187,6 +187,7 @@ export class CompositeGateClass extends GateClass {
   }
 
   connectGateToPart(source: Node, target: Node) {
+    console.log('connnectGateToPart', source, target)
     source.addListener(target)
   }
 

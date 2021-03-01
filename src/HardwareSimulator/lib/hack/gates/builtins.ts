@@ -39,14 +39,11 @@ export abstract class Gate {
     gateClass: GateClass
     inputPins: Node[]
     outputPins: Node[]
-    isDirty: boolean
 
     constructor(inputPins: Node[], outputPins: Node[], gateClass: GateClass) {
         this.inputPins = inputPins
         this.outputPins = outputPins
         this.gateClass = gateClass
-
-        this.isDirty = false
     }
 
     abstract reCompute(): void
@@ -64,9 +61,7 @@ export abstract class Gate {
     }
 
     eval() {
-        if (this.isDirty) {
-            this.doEval()
-        }
+        this.doEval()
     }
     
     doEval() {
@@ -83,6 +78,7 @@ export class Nand extends BuiltInGate {
         const a = this.inputPins[0].get()
         const b = this.inputPins[1].get()
         this.outputPins[0].set(0x1 - (a & b))
+        console.log(a, b, this.outputPins[0])
     }
 }
 

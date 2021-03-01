@@ -1,14 +1,18 @@
 import React, { useEffect, useState } from 'react'
-import { getGateClassHDL } from './lib/hack/gates'
-import { Gate } from './lib/hack/gates/builtins'
+import { getGateClassHDL, PinInfo } from './lib/hack/gates'
+import { Gate, Node } from './lib/hack/gates/builtins'
 
-export type ActionsProps = { setHDLFile: (_: File | null) => void }
-export function Actions({ setHDLFile }: ActionsProps) {
+export type ActionsProps = {
+  setHDLFile: (_: File | null) => void
+  singleStep: () => void
+}
+export function Actions({ setHDLFile, singleStep }: ActionsProps) {
   return (
     <div>
       <label>Load Chip
         <input type="file" accept=".hdl" onChange={(e) => setHDLFile(e.target.files?.item(0) ?? null)} />
       </label>
+      <button onClick={singleStep}>Single Step</button>
     </div>
   )
 }
@@ -26,6 +30,31 @@ export function HDLViewer ({ hdl }: HDLViewerProps) {
 export type StatusMessageProps = { status: string | null }
 export function StatusMessage ({ status }: StatusMessageProps) {
   return (<div>{status}</div>)
+}
+
+export type PinsProps = {
+  title: string
+  pinNodes: Node[]
+  pinInfos: PinInfo[]
+  editable: boolean
+}
+export function Pins ({ title, pinNodes, pinInfos, editable }: PinsProps) {
+  return (
+    <div>
+      <h3>{title}</h3>
+      <table>
+        <tbody>
+          {pinNodes.map((node, i) => {
+            const info = pinInfos[i]
+            const name = info.name
+            const value = node.value
+            const valueUI = editable ? <input value={value} onChange={(e) => node.set(parseInt(e.target.value))} /> : <input value={value} readOnly />
+            return (<tr key={i}><td>{name}</td><td>{valueUI}</td></tr>)
+          })}
+        </tbody>
+      </table>
+    </div>
+  )
 }
 
 export default function HardwareSimulator() {
@@ -57,14 +86,22 @@ export default function HardwareSimulator() {
 
   // bind gate to UI
   useEffect(() => {
-    console.log(gate?.gateClass)
+    console.log(gate)
   }, [gate])
+
+  const inputPinNodes = gate?.inputPins ?? []
+  const inputPinsInfo = gate?.gateClass.inputPinsInfo ?? []
+  const outputPinNodes = gate?.outputPins ?? []
+  const outputPinsInfo = gate?.gateClass.outputPinsInfo ?? []
+  const hdlFileName = hdlFile?.name ?? null
 
   return (
     <div>
       <h1>HardwareSimulator</h1>
-      <Actions setHDLFile={setHDLFile} />
-      <ChipName name={hdlFile?.name ?? null} />
+      <Actions setHDLFile={setHDLFile} singleStep={() => gate?.eval()} />
+      <Pins title="Input Pins" editable={true} pinNodes={inputPinNodes} pinInfos={inputPinsInfo} />
+      <Pins title="Output Pins" editable={false} pinNodes={outputPinNodes} pinInfos={outputPinsInfo} />
+      <ChipName name={hdlFileName} />
       <HDLViewer hdl={hdl} />
       <StatusMessage status={status} />
     </div>
