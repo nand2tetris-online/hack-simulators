@@ -187,7 +187,6 @@ export class CompositeGateClass extends GateClass {
   }
 
   connectGateToPart(source: Node, target: Node) {
-    console.log('connnectGateToPart', source, target)
     source.addListener(target)
   }
 

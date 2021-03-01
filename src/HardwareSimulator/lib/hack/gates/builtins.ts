@@ -78,7 +78,6 @@ export class Nand extends BuiltInGate {
         const a = this.inputPins[0].get()
         const b = this.inputPins[1].get()
         this.outputPins[0].set(0x1 - (a & b))
-        console.log(a, b, this.outputPins[0])
     }
 }
 

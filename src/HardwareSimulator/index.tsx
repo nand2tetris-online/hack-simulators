@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react'
-import { getGateClassHDL, PinInfo } from './lib/hack/gates'
-import { Gate, Node } from './lib/hack/gates/builtins'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
+import { getGateClassHDL, PinType } from './lib/hack/gates'
+import { Gate } from './lib/hack/gates/builtins'
 
 export type ActionsProps = {
   setHDLFile: (_: File | null) => void
@@ -34,22 +34,27 @@ export function StatusMessage ({ status }: StatusMessageProps) {
 
 export type PinsProps = {
   title: string
-  pinNodes: Node[]
-  pinInfos: PinInfo[]
-  editable: boolean
+  type: PinType 
+  pinData: PinData[]
+  updatePin: (data: PinUpdate) => void
 }
-export function Pins ({ title, pinNodes, pinInfos, editable }: PinsProps) {
+export function Pins ({ title, type, pinData, updatePin }: PinsProps) {
+  const onChange = useCallback((value: string, number: number, type: PinType) => {
+    const v = parseInt(value) || 0
+    if (v > 1) {
+      return
+    }
+    updatePin({ value: v, number, type })
+  }, [updatePin])
+
   return (
     <div>
       <h3>{title}</h3>
       <table>
         <tbody>
-          {pinNodes.map((node, i) => {
-            const info = pinInfos[i]
-            const name = info.name
-            const value = node.value
-            const valueUI = editable ? <input value={value} onChange={(e) => node.set(parseInt(e.target.value))} /> : <input value={value} readOnly />
-            return (<tr key={i}><td>{name}</td><td>{valueUI}</td></tr>)
+          {pinData.map((data, i) => {
+            const { name, value } = data
+            return (<tr key={i}><td>{name}</td><td><input value={value} onChange={(e) => onChange(e.target.value, i, type)} /></td></tr>)
           })}
         </tbody>
       </table>
@@ -57,11 +62,25 @@ export function Pins ({ title, pinNodes, pinInfos, editable }: PinsProps) {
   )
 }
 
+export type PinUpdate = {
+  value: number
+  number: number
+  type: PinType
+}
+
+export type PinData = {
+  name: string
+  value: number
+}
+
 export default function HardwareSimulator() {
   const [hdlFile, setHDLFile] = useState<File | null>(null)
   const [hdl, setHDL] = useState<string | null>(null)
   const [status, setStatus] = useState<string | null>(null)
-  const [gate, setGate] = useState<Gate | null>(null)
+
+  const [pinData, setPinData] = useState<{ input: PinData[], output: PinData[] }>({ input: [], output: [] })
+
+  const gate = useRef<Gate | null>(null)
 
   // load and set hdl file contents
   useEffect(() => {
@@ -71,36 +90,56 @@ export default function HardwareSimulator() {
     })()
   }, [hdlFile])
 
+  const updatePinData = useCallback(() => {
+    const input = gate.current?.inputPins.map((node, i) => ({
+      name: gate.current?.gateClass.inputPinsInfo[i].name ?? '',
+      value: node.value
+    })) ?? []
+
+    const output = gate.current?.outputPins.map((node, i) => ({
+      name: gate.current?.gateClass.outputPinsInfo[i].name ?? '',
+      value: node.value
+    })) ?? []
+
+    setPinData({ input, output })
+  }, [])
+
   // parse hdl file contents into gate
   useEffect(() => {
     if (!hdl) { return }
 
     try {
       const aGateClass = getGateClassHDL(hdl)
-      setGate(aGateClass.newInstance())
+      gate.current = aGateClass.newInstance()
+      updatePinData()
       setStatus('Loaded successfully!')
     } catch (error) {
       setStatus(`${error}`)
     }
-  }, [hdl])
+  }, [hdl, updatePinData])
 
-  // bind gate to UI
-  useEffect(() => {
-    console.log(gate)
-  }, [gate])
+  const singleStep = useCallback(() => {
+    gate.current?.eval()
+    updatePinData()
+  }, [updatePinData])
 
-  const inputPinNodes = gate?.inputPins ?? []
-  const inputPinsInfo = gate?.gateClass.inputPinsInfo ?? []
-  const outputPinNodes = gate?.outputPins ?? []
-  const outputPinsInfo = gate?.gateClass.outputPinsInfo ?? []
+  const updatePin = useCallback(({ value, number, type }: PinUpdate) => {
+    // can only update input pins
+    if (type !== PinType.INPUT) {
+      return
+    }
+    gate.current?.inputPins[number].set(value)
+    updatePinData()
+  }, [updatePinData])
+
   const hdlFileName = hdlFile?.name ?? null
 
   return (
     <div>
       <h1>HardwareSimulator</h1>
-      <Actions setHDLFile={setHDLFile} singleStep={() => gate?.eval()} />
-      <Pins title="Input Pins" editable={true} pinNodes={inputPinNodes} pinInfos={inputPinsInfo} />
-      <Pins title="Output Pins" editable={false} pinNodes={outputPinNodes} pinInfos={outputPinsInfo} />
+      <Actions setHDLFile={setHDLFile} singleStep={singleStep} />
+      <Pins title="Input Pins" type={PinType.INPUT} pinData={pinData.input} updatePin={updatePin} />
+      <Pins title="Output Pins" type={PinType.OUTPUT} pinData={pinData.output} updatePin={updatePin} />
       <ChipName name={hdlFileName} />
       <HDLViewer hdl={hdl} />
       <StatusMessage status={status} />
