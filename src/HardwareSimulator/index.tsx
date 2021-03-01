@@ -111,6 +111,7 @@ export default function HardwareSimulator() {
     try {
       const aGateClass = getGateClassHDL(hdl)
       gate.current = aGateClass.newInstance()
+      console.log(gate.current)
       updatePinData()
       setStatus('Loaded successfully!')
     } catch (error) {
@@ -125,9 +126,7 @@ export default function HardwareSimulator() {
 
   const updatePin = useCallback(({ value, number, type }: PinUpdate) => {
     // can only update input pins
-    if (type !== PinType.INPUT) {
-      return
-    }
+    if (type !== PinType.INPUT) { return }
     gate.current?.inputPins[number].set(value)
     updatePinData()
   }, [updatePinData])

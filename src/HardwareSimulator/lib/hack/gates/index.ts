@@ -4,12 +4,15 @@ import builtins, { BuiltInGate, Gate, Node } from "./builtins"
 export enum PinType {
   INPUT = "INPUT",
   OUTPUT = "OUTPUT",
+  INTERNAL = "INTERNAL",
   UNKNOWN = "UNKNOWN"
 }
 
 export enum ConnectionType {
   FROM_INPUT = "FROM_INPUT",
   TO_OUTPUT = "TO_OUTPUT",
+  FROM_INTERNAL = "FROM_INTERNAL",
+  TO_INTERNAL = "TO_INTERNAL",
   INVALID = "INVALID"
 }
 
@@ -61,13 +64,13 @@ export abstract class GateClass {
   }
 
 
-  private registerPins(pinInfos: PinInfo[], type: PinType) {
+  registerPins(pinInfos: PinInfo[], type: PinType) {
     pinInfos.forEach((pinInfo, i) => {
       this.registerPin(pinInfo, type, i)
     })
   }
 
-  private registerPin(pinInfo: PinInfo, type: PinType, pinNumber: number) {
+  registerPin(pinInfo: PinInfo, type: PinType, pinNumber: number) {
     this.namesToTypes[pinInfo.name] = type
     this.namesToNumbers[pinInfo.name] = pinNumber
   }
@@ -126,16 +129,32 @@ export class BuiltInGateClass extends GateClass {
 
 export class CompositeGate extends Gate {
   parts: Gate[]
+  internalPins: Node[]
 
-  constructor(inputPins: Node[], outputPins: Node[], gateClass: GateClass, parts: Gate[]) {
+  constructor(inputPins: Node[], outputPins: Node[], internalPins: Node[], gateClass: GateClass, parts: Gate[]) {
     super(inputPins, outputPins, gateClass)
     this.parts = parts
+    this.internalPins = internalPins
   }
 
   reCompute() {
     for (let part of this.parts) {
       part.eval()
     }
+  }
+
+  getNode(name: string): Node | null {
+    const result = super.getNode(name)
+
+    if (!result) {
+      const type = this.gateClass.getPinType(name)
+      const index = this.gateClass.getPinNumber(name)
+      if (type === PinType.INTERNAL) {
+        return this.internalPins[index]
+      }
+    }
+
+    return result
   }
 }
 
@@ -163,9 +182,11 @@ export class CompositeGateClass extends GateClass {
 
     const inputNodes: Node[] = this.inputPinsInfo.map((_) => new Node())
     const outputNodes: Node[] = this.outputPinsInfo.map((_) => new Node())
+    const internalNodes: Node[] = this.internalPinsInfo.map((_) => new Node())
+
+    const internalConnections: Set<Connection> = new Set()
 
     // First scan
-    // const connections: Set<Connection> = new Set()
     let partNode: Node | null = null
     for (let connection of this.connections) {
       partNode = parts[connection.partNumber].getNode(connection.partPinName)
@@ -178,10 +199,30 @@ export class CompositeGateClass extends GateClass {
         case ConnectionType.TO_OUTPUT:
           this.connectGateToPart(partNode, outputNodes[connection.gatePinNumber])
           break
+        case ConnectionType.TO_INTERNAL:
+          const target = new Node()
+          partNode.addListener(target)
+          internalNodes[connection.gatePinNumber] = target
+          break
+        case ConnectionType.FROM_INTERNAL:
+          internalConnections.add(connection)
+          break
       }
     }
 
-    const result = new CompositeGate(inputNodes, outputNodes, this, parts)
+    // Second scan
+    for (let connection of internalConnections) {
+      partNode = parts[connection.partNumber].getNode(connection.partPinName)
+      if (!partNode) { continue }
+      switch (connection.type) {
+        case ConnectionType.FROM_INTERNAL:
+          const source = internalNodes[connection.gatePinNumber]
+          source.addListener(partNode)
+          break
+      }
+    }
+
+    const result = new CompositeGate(inputNodes, outputNodes, internalNodes, this, parts)
 
     return result
   }
@@ -284,9 +325,20 @@ export class CompositeGateClass extends GateClass {
     // const leftNumber = partGateClass.getPinNumber(leftName)
     // const leftPinInfo = partGateClass.getPinInfo(leftType, leftNumber)
 
-    const rightType = this.getPinType(rightName)
-    const rightNumber = this.getPinNumber(rightName)
-    //const rightPinInfo = this.getPinInfo(rightType, rightNumber)
+    let rightType = this.getPinType(rightName)
+    let rightNumber: number
+    let rightPinInfo: PinInfo
+
+    if (rightType === PinType.UNKNOWN) {
+      rightType = PinType.INTERNAL
+      rightPinInfo = { name: rightName, width: 1 }
+      rightNumber = this.internalPinsInfo.length
+      this.internalPinsInfo.push(rightPinInfo)
+      this.registerPin(rightPinInfo, PinType.INTERNAL, rightNumber)
+    } else {
+      rightNumber = this.getPinNumber(rightName)
+      // rightPinInfo = this.getPinInfo(rightType, rightNumber)
+    }
 
     let connectionType: ConnectionType = ConnectionType.INVALID
     switch (leftType) {
@@ -294,6 +346,9 @@ export class CompositeGateClass extends GateClass {
         switch (rightType) {
           case PinType.INPUT:
             connectionType = ConnectionType.FROM_INPUT
+            break
+          case PinType.INTERNAL:
+            connectionType = ConnectionType.FROM_INTERNAL
             break
           case PinType.OUTPUT:
             input.fail("Can't connect gate's output pin to part")
@@ -303,6 +358,9 @@ export class CompositeGateClass extends GateClass {
         switch (rightType) {
           case PinType.OUTPUT:
             connectionType = ConnectionType.TO_OUTPUT
+            break
+          case PinType.INTERNAL:
+            connectionType = ConnectionType.TO_INTERNAL
             break
           case PinType.INPUT:
             input.fail("Can't connect part's output pin to gate's input pin")
