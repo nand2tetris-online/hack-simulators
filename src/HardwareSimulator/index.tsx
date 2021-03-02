@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
-import { getGateClassHDL, PinType } from './lib/hack/gates'
+import { CompositeGate, CompositeGateClass, getGateClassHDL, PinType } from './lib/hack/gates'
 import { Gate } from './lib/hack/gates/builtins'
 
 export type ActionsProps = {
@@ -78,7 +78,7 @@ export default function HardwareSimulator() {
   const [hdl, setHDL] = useState<string | null>(null)
   const [status, setStatus] = useState<string | null>(null)
 
-  const [pinData, setPinData] = useState<{ input: PinData[], output: PinData[] }>({ input: [], output: [] })
+  const [pinData, setPinData] = useState<{ input: PinData[], output: PinData[], internal: PinData[] }>({ input: [], output: [], internal: [] })
 
   const gate = useRef<Gate | null>(null)
 
@@ -101,7 +101,15 @@ export default function HardwareSimulator() {
       value: node.value
     })) ?? []
 
-    setPinData({ input, output })
+    const compositeGate = gate.current as CompositeGate
+    const compositeClass = compositeGate.gateClass as CompositeGateClass
+
+    const internal = compositeGate.internalPins.map((node, i) => ({
+      name: compositeClass.internalPinsInfo[i].name ?? '',
+      value: node.value
+    })) ?? []
+
+    setPinData({ input, output, internal })
   }, [])
 
   // parse hdl file contents into gate
@@ -139,6 +147,7 @@ export default function HardwareSimulator() {
       <Actions setHDLFile={setHDLFile} singleStep={singleStep} />
       <Pins title="Input Pins" type={PinType.INPUT} pinData={pinData.input} updatePin={updatePin} />
       <Pins title="Output Pins" type={PinType.OUTPUT} pinData={pinData.output} updatePin={updatePin} />
+      <Pins title="Internal Pins" type={PinType.INTERNAL} pinData={pinData.internal} updatePin={updatePin} />
       <ChipName name={hdlFileName} />
       <HDLViewer hdl={hdl} />
       <StatusMessage status={status} />
