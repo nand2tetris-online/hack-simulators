@@ -96,7 +96,7 @@ export class BuiltInGateClass extends GateClass {
 
     // read typescript class name
     input.advance()
-    if (input.tokenType !== TokenType.IDENTIFIER) {
+    if (input.token.type !== TokenType.IDENTIFIER) {
       input.fail("Missing typescript class name")
     }
 
@@ -106,13 +106,13 @@ export class BuiltInGateClass extends GateClass {
     // read ';' symbol
     input.advance()
     // @ts-ignore
-    if (input.tokenType !== TokenType.SEMICOLON) {
+    if (input.token.type !== TokenType.SEMICOLON) {
       input.fail("Missing ';'")
     }
 
     // read ';' symbol
     input.advance()
-    if (input.tokenType !== TokenType.RBRACE) {
+    if (input.token.type !== TokenType.RBRACE) {
       input.fail("Missing '}'")
     }
   }
@@ -238,15 +238,15 @@ export class CompositeGateClass extends GateClass {
       input.advance()
 
       // check if end of hdl
-      if (input.tokenType === TokenType.RBRACE) {
+      if (input.token.type === TokenType.RBRACE) {
         endOfParts = true
       } else {
         // read partName
-        if (input.tokenType !== TokenType.IDENTIFIER) {
+        if (input.token.type !== TokenType.IDENTIFIER) {
           input.fail("A GateClass name is expected")
         }
 
-        const partName = input.token ?? ''
+        const partName = input.token.literal ?? ''
         const gateClass = getGateClassBuiltIn(partName)
         const partNumber = this.partsList.length
         this.partsList.push(gateClass)
@@ -254,7 +254,7 @@ export class CompositeGateClass extends GateClass {
         // read (
         input.advance()
         // @ts-ignore
-        if (input.tokenType !== TokenType.LPAREN) {
+        if (input.token.type !== TokenType.LPAREN) {
           input.fail("Missing '('")
         }
 
@@ -262,7 +262,7 @@ export class CompositeGateClass extends GateClass {
 
         // read ;
         input.advance()
-        if (input.tokenType !== TokenType.SEMICOLON) {
+        if (input.token.type !== TokenType.SEMICOLON) {
           input.fail("Missing ';'")
         }
       }
@@ -285,31 +285,31 @@ export class CompositeGateClass extends GateClass {
     while (!endOfPins) {
       // read left pin name
       input.advance()
-      if (input.tokenType !== TokenType.IDENTIFIER) {
+      if (input.token.type !== TokenType.IDENTIFIER) {
         input.fail("A pin name is expected")
       }
-      const leftName = input.token ?? ""
+      const leftName = input.token.literal ?? ""
 
       // read =
       input.advance()
       // @ts-ignore
-      if (input.tokenType !== TokenType.EQUAL) {
+      if (input.token.type !== TokenType.EQUAL) {
         input.fail("Missing '='")
       }
 
       // read right pin name
       input.advance()
-      if (input.tokenType !== TokenType.IDENTIFIER) {
+      if (input.token.type !== TokenType.IDENTIFIER) {
         input.fail("A pin name is expected")
       }
-      const rightName = input.token ?? ""
+      const rightName = input.token.literal ?? ""
       this.addConnection(input, partName, partNumber, leftName, rightName)
 
       // read , or )
       input.advance()
-      if (input.tokenType === TokenType.RPAREN) {
+      if (input.token.type === TokenType.RPAREN) {
         endOfPins = true
-      } else if (input.tokenType !== TokenType.COMMA) {
+      } else if (input.token.type !== TokenType.COMMA) {
         input.fail("Missing ',' or ')'")
       }
     }
@@ -387,40 +387,40 @@ export function getGateClassBuiltIn(name: string): GateClass | never {
 export function readHDL(input: HDLTokenizer): GateClass | never {
   // read CHIP keyword
   input.advance()
-  if (input.tokenType !== TokenType.CHIP) { input.fail("Missing 'CHIP' keyword") }
+  if (input.token.type !== TokenType.CHIP) { input.fail("Missing 'CHIP' keyword") }
 
   // read gate name
   input.advance()
   // @ts-ignore T2367
-  if (input.tokenType !== TokenType.IDENTIFIER) { input.fail("Missing chip name") }
-  const gateName = input.token ?? ""
+  if (input.token.type !== TokenType.IDENTIFIER) { input.fail("Missing chip name") }
+  const gateName = input.token.literal ?? ""
 
   // read {
   input.advance()
-  if (input.tokenType !== TokenType.LBRACE) { input.fail("Missing '{'") }
+  if (input.token.type !== TokenType.LBRACE) { input.fail("Missing '{'") }
 
   // read IN keyword
   input.advance()
   let inputPinsInfo: PinInfo[] = []
-  if (input.tokenType === TokenType.IN) {
+  if (input.token.type === TokenType.IN) {
     inputPinsInfo = getPinsInfo(input)
     input.advance()
   }
 
   // read OUT keyword
   let outputPinsInfo: PinInfo[] = []
-  if (input.tokenType === TokenType.OUT) {
+  if (input.token.type === TokenType.OUT) {
     outputPinsInfo = getPinsInfo(input)
     input.advance()
   }
 
   // read BUILTIN or PARTS
-  if (input.tokenType === TokenType.BUILTIN) {
+  if (input.token.type === TokenType.BUILTIN) {
     return new BuiltInGateClass(gateName, input, inputPinsInfo, outputPinsInfo)
-  } else if (input.tokenType === TokenType.PARTS) {
+  } else if (input.token.type === TokenType.PARTS) {
     // read :
     input.advance()
-    if (input.tokenType !== TokenType.COLON) {
+    if (input.token.type !== TokenType.COLON) {
       input.fail("Missing ':'")
     }
     return new CompositeGateClass(gateName, input, inputPinsInfo, outputPinsInfo)
@@ -436,14 +436,14 @@ export function getPinsInfo(input: HDLTokenizer): PinInfo[] {
 
   while (!exit) {
     // check ';' symbol
-    if (input.tokenType === TokenType.SEMICOLON) {
+    if (input.token.type === TokenType.SEMICOLON) {
       exit = true
     } else {
       // read pin name
-      if (input.tokenType !== TokenType.IDENTIFIER) {
+      if (input.token.type !== TokenType.IDENTIFIER) {
         input.fail("Missing pin name")
       }
-      const pinName = input.token ?? ""
+      const pinName = input.token.literal ?? ""
       // TODO: allow for [6] bus syntax
       const pinWidth = 1
       pinInfos.push({ name: pinName, width: pinWidth })
@@ -451,10 +451,10 @@ export function getPinsInfo(input: HDLTokenizer): PinInfo[] {
       // check separator
       input.advance()
       // @ts-ignore
-      if (!(input.tokenType === TokenType.COMMA || input.tokenType === TokenType.SEMICOLON)) {
+      if (!(input.token.type === TokenType.COMMA || input.token.type === TokenType.SEMICOLON)) {
         input.fail("Missing ',' or ';'")
       }
-      if (input.tokenType === TokenType.COMMA) {
+      if (input.token.type === TokenType.COMMA) {
         input.advance()
       }
     }

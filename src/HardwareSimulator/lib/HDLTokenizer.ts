@@ -28,6 +28,11 @@ export enum TokenType {
 
 export class HDLError extends Error {}
 
+export type Token = {
+  type: TokenType | null
+  literal: string | null
+}
+
 export class HDLTokenizer {
   private input: string
   private readpos: number
@@ -36,8 +41,7 @@ export class HDLTokenizer {
   private keywords: { [_: string]: TokenType }
 
   // current token
-  token: string | null
-  tokenType: TokenType | null
+  token: Token = { type: null, literal: null }
 
   constructor (input: string) {
     this.input = input
@@ -54,66 +58,63 @@ export class HDLTokenizer {
       false: TokenType.FALSE
     }
 
-    this.tokenType = null
-    this.token = null
-
     this.readChar()
   }
 
   hasMoreTokens (): boolean {
-    return this.tokenType !== TokenType.EOF
+    return this.token.type !== TokenType.EOF
   }
 
   advance () {
     this.skipWhitespaceAndComments()
 
-    this.token = this.cur
+    this.token.literal = this.cur
     switch (this.cur) {
       case '{':
-        this.tokenType = TokenType.LBRACE
+        this.token.type = TokenType.LBRACE
         break
       case '}':
-        this.tokenType = TokenType.RBRACE
+        this.token.type = TokenType.RBRACE
         break
       case '(':
-        this.tokenType = TokenType.LPAREN
+        this.token.type = TokenType.LPAREN
         break
       case ')':
-        this.tokenType = TokenType.RPAREN
+        this.token.type = TokenType.RPAREN
         break
       case '[':
-        this.tokenType = TokenType.LBRACKET
+        this.token.type = TokenType.LBRACKET
         break
       case ']':
-        this.tokenType = TokenType.RBRACKET
+        this.token.type = TokenType.RBRACKET
         break
       case '=':
-        this.tokenType = TokenType.EQUAL
+        this.token.type = TokenType.EQUAL
         break
       case ',':
-        this.tokenType = TokenType.COMMA
+        this.token.type = TokenType.COMMA
         break
       case '.':
-        this.tokenType = TokenType.DOT
+        this.token.type = TokenType.DOT
         break
       case ':':
-        this.tokenType = TokenType.COLON
+        this.token.type = TokenType.COLON
         break
       case ';':
-        this.tokenType = TokenType.SEMICOLON
+        this.token.type = TokenType.SEMICOLON
         break
       case '':
-        this.tokenType = TokenType.EOF
+        this.token.type = TokenType.EOF
         break
       default:
         if (isLetter(this.cur)) {
           const ident = this.readIdentifier()
-          this.tokenType = this.lookupIdentifier(ident)
-          this.token = ident
+          this.token.type = this.lookupIdentifier(ident)
+          this.token.literal = ident
           return
         } else if (isDigit(this.cur)) {
-          this.tokenType = TokenType.INT
-          this.token = this.readNumber()
+          this.token.type = TokenType.INT
+          this.token.literal = this.readNumber()
           return
         }
     }
