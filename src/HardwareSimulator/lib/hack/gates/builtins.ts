@@ -3,35 +3,27 @@ import { GateClass, PinType } from "."
 export class Node {
     value: number = 0
 
-    protected listeners: Set<Node> | null = null
+    protected connections: Set<Node> | null = null
 
     get() {
         return this.value
     }
 
     set(value: number) {
-        if (value !== this.value) {
-            this.value = value
-
-            if (this.listeners) {
-                for (let listener of this.listeners) {
-                    listener.set(this.get())
-                }
-            }
+        if (value === this.value) {
+            return
         }
+        this.value = value
+        for (let listener of this.connections ?? []) listener.set(this.get())
     }
 
-    addListener(node: Node) {
-        if (!this.listeners) { 
-            this.listeners = new Set()
-        }
-        this.listeners.add(node)
+    connect(node: Node) {
+        if (!this.connections) this.connections = new Set()
+        this.connections.add(node)
     }
 
-    removeListener(node: Node) {
-        if (this.listeners) {
-            this.listeners.delete(node)
-        }
+    disconnect(node: Node) {
+        if (this.connections) this.connections.delete(node)
     }
 }
 

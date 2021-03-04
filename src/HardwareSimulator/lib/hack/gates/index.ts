@@ -64,7 +64,6 @@ export abstract class GateClass {
     return this.namesToNumbers[pinName] ?? -1
   }
 
-
   registerPins(pinInfos: PinInfo[], type: PinType) {
     pinInfos.forEach((pinInfo, i) => {
       this.registerPin(pinInfo, type, i)
@@ -107,10 +106,7 @@ export class BuiltInGateClass extends GateClass {
   newInstance(): Gate {
     const inputNodes: Node[] = this.inputPinsInfo.map((_) => new Node())
     const outputNodes: Node[] = this.outputPinsInfo.map((_) => new Node())
-
-    const result = new this.tsClassName(inputNodes, outputNodes, this)
-
-    return result
+    return new this.tsClassName(inputNodes, outputNodes, this)
   }
 }
 
@@ -120,8 +116,8 @@ export class CompositeGate extends Gate {
 
   constructor(inputPins: Node[], outputPins: Node[], internalPins: Node[], gateClass: GateClass, parts: Gate[]) {
     super(inputPins, outputPins, gateClass)
-    this.parts = parts
     this.internalPins = internalPins
+    this.parts = parts
   }
 
   reCompute() {
@@ -132,7 +128,6 @@ export class CompositeGate extends Gate {
 
   getNode(name: string): Node | null {
     const result = super.getNode(name)
-
     if (!result) {
       const type = this.gateClass.getPinType(name)
       const index = this.gateClass.getPinNumber(name)
@@ -140,7 +135,6 @@ export class CompositeGate extends Gate {
         return this.internalPins[index]
       }
     }
-
     return result
   }
 }
@@ -160,22 +154,17 @@ export class CompositeGateClass extends GateClass {
   }
 
   newInstance(): Gate {
-    // create gates from parts
-    const parts: Gate[] = []
+    const parts: Gate[] = this.partsList.map((partClass) => partClass.newInstance())
 
-    this.partsList.forEach((partClass, i) => {
-      parts.push(partClass.newInstance())
-    })
+    const inputNodes = this.inputPinsInfo.map((_) => new Node())
+    const outputNodes = this.outputPinsInfo.map((_) => new Node())
+    const internalNodes = this.internalPinsInfo.map((_) => new Node())
 
-    const inputNodes: Node[] = this.inputPinsInfo.map((_) => new Node())
-    const outputNodes: Node[] = this.outputPinsInfo.map((_) => new Node())
-    const internalNodes: Node[] = this.internalPinsInfo.map((_) => new Node())
-
-    const internalConnections: Set<Connection> = new Set()
+    const internalConnections = new Set<Connection>()
 
     // First scan
     let partNode: Node | null = null
-    for (let connection of this.connections) {
+    for (const connection of this.connections) {
       partNode = parts[connection.partNumber].getNode(connection.partPinName)
       if (!partNode) { continue }
 
@@ -188,7 +177,7 @@ export class CompositeGateClass extends GateClass {
           break
         case ConnectionType.TO_INTERNAL:
           const target = new Node()
-          partNode.addListener(target)
+          partNode.connect(target)
           internalNodes[connection.gatePinNumber] = target
           break
         case ConnectionType.FROM_INTERNAL:
@@ -198,24 +187,22 @@ export class CompositeGateClass extends GateClass {
     }
 
     // Second scan
-    for (let connection of internalConnections) {
+    for (const connection of internalConnections) {
       partNode = parts[connection.partNumber].getNode(connection.partPinName)
       if (!partNode) { continue }
       switch (connection.type) {
         case ConnectionType.FROM_INTERNAL:
           const source = internalNodes[connection.gatePinNumber]
-          source.addListener(partNode)
+          source.connect(partNode)
           break
       }
     }
 
-    const result = new CompositeGate(inputNodes, outputNodes, internalNodes, this, parts)
-
-    return result
+    return new CompositeGate(inputNodes, outputNodes, internalNodes, this, parts)
   }
 
-  connectGateToPart(source: Node, target: Node) {
-    source.addListener(target)
+  connectGateToPart(part: Node, gate: Node) {
+    part.connect(gate)
   }
 
   readParts(parser: HDLParser) {
@@ -223,65 +210,57 @@ export class CompositeGateClass extends GateClass {
     while (parser.hasMoreTokens() && !endOfParts) {
       // check if end of hdl
       if (parser.peekTokenIs(TokenType.RBRACE)) {
+        // read }
         parser.advance()
         endOfParts = true
       } else {
         // read partName
         parser.expectPeek(TokenType.IDENTIFIER, "A GateClass name is expected")
-
-        const partName = parser.cur.literal ?? ''
+        const partName = parser.token.literal ?? ''
+        // make part
         const gateClass = getGateClassBuiltIn(partName)
         const partNumber = this.partsList.length
         this.partsList.push(gateClass)
-
         // read (
         parser.expectPeek(TokenType.LPAREN, "Missing '('")
-
+        // read pins
         this.readPinNames(parser, partName, partNumber)
-
         // read ;
         parser.expectPeek(TokenType.SEMICOLON, "Missing ';'")
       }
     }
-
-    if (!endOfParts) {
-      parser.fail("Missing '}'")
-    }
-
-    // expect EOF
+    if (!endOfParts) parser.fail("Missing '}'")
+    // read EOF
     parser.expectPeek(TokenType.EOF, "Expected EOF after '}'")
   }
 
   readPinNames(parser: HDLParser, partName: string, partNumber: number): void | never {
     let endOfPins = false
     // read pin names
-    while (!endOfPins) {
+    while (parser.hasMoreTokens() && !endOfPins) {
       // read left pin name
       parser.expectPeek(TokenType.IDENTIFIER, "A pin name is expected")
-      const leftName = parser.cur.literal ?? ""
-
+      const leftName = parser.token.literal ?? ""
       // read =
       parser.expectPeek(TokenType.EQUAL, "Missing '='")
-
       // read right pin name
       parser.expectPeek(TokenType.IDENTIFIER, "A pin name is expected")
-      const rightName = parser.cur.literal ?? ""
+      const rightName = parser.token.literal ?? ""
+      // make connection
       this.addConnection(parser, partName, partNumber, leftName, rightName)
-
-
       // read , or )
-      // @ts-ignore
       if (parser.peekTokenIs(TokenType.RPAREN)) {
         endOfPins = true
       } else if (!parser.peekTokenIs(TokenType.COMMA)) {
         parser.fail("Missing ',' or ')'")
       }
-
       parser.advance()
     }
+
+    if (!endOfPins) parser.fail("Unexpected EOF")
   }
 
-  addConnection(parser: HDLParser, partName: string, partNumber: number, leftName: string, rightName: string) {
+  addConnection(parser: HDLParser, partName: string, partNumber: number, leftName: string, rightName: string): void | never {
     const partGateClass = this.partsList[partNumber]
 
     const leftType = partGateClass.getPinType(leftName)
@@ -336,47 +315,33 @@ export class CompositeGateClass extends GateClass {
 }
 
 export function getGateClassHDL(hdl: string): GateClass | never {
-  return readHDL(new HDLTokenizer(hdl))
+  const tokenizer = new HDLTokenizer(hdl)
+  const parser = new HDLParser(tokenizer)
+  return readHDL(parser)
 }
 
 export function getGateClassBuiltIn(name: string): GateClass | never {
   // TODO: support more than Nand
-  if (name !== "Nand") {
-    HDLTokenizer.fail(`Unknown part type ${name}`)
-  }
-  return readHDL(new HDLTokenizer(builtins.NAND.hdl))
+  if (name !== "Nand") HDLTokenizer.fail(`Unknown part type ${name}`)
+
+  return getGateClassHDL(builtins.NAND.hdl)
 }
 
-export function readHDL(input: HDLTokenizer): GateClass | never {
-  // TODO move this
-  const parser = new HDLParser(input)
-
+export function readHDL(parser: HDLParser): GateClass | never {
   // read CHIP keyword
   parser.expectCurrent(TokenType.CHIP, "Missing 'CHIP' keyword")
-
   // read gate name
   parser.expectPeek(TokenType.IDENTIFIER, "Missing chip name")
-  const gateName = parser.cur.literal ?? ""
-
+  const gateName = parser.token.literal ?? ""
   // read {
   parser.expectPeek(TokenType.LBRACE, "Missing '{'")
-
   // read IN keyword
-  let inputPinsInfo: PinInfo[] = []
-  if (parser.peekTokenIs(TokenType.IN)) {
-    inputPinsInfo = getPinsInfo(parser)
-  }
-
+  const inputPinsInfo = parser.peekTokenIs(TokenType.IN) ? getPinsInfo(parser) : []
   // read OUT keyword
-  let outputPinsInfo: PinInfo[] = []
-  // @ts-ignore T2367
-  if (parser.peekTokenIs(TokenType.OUT)) {
-    outputPinsInfo = getPinsInfo(parser)
-  }
-
-  parser.advance()
+  const outputPinsInfo = parser.peekTokenIs(TokenType.OUT) ? getPinsInfo(parser) : []
 
   // read BUILTIN or PARTS
+  parser.advance()
   if (parser.tokenIs(TokenType.BUILTIN)) {
     return new BuiltInGateClass(gateName, parser, inputPinsInfo, outputPinsInfo)
   } else if (parser.tokenIs(TokenType.PARTS)) {
@@ -391,24 +356,25 @@ export function readHDL(input: HDLTokenizer): GateClass | never {
 export function getPinsInfo(parser: HDLParser): PinInfo[] {
   let pinInfos: PinInfo[] = []
   let exit = false
-  parser.advance()
 
-  while (!exit) {
+  parser.advance()
+  while (parser.hasMoreTokens() && !exit) {
     // check ';' symbol
     if (parser.tokenIs(TokenType.SEMICOLON)) {
       exit = true
     } else {
       // read pin name
       parser.expectPeek(TokenType.IDENTIFIER, "Missing pin name")
-      const pinName = parser.cur.literal ?? ""
-      // TODO: allow for [6] bus syntax
+      const pinName = parser.token.literal ?? ""
+      // TODO: allow for [16] bus syntax
       const pinWidth = 1
       pinInfos.push({ name: pinName, width: pinWidth })
-
       // check separator
       parser.expectPeekOneOf([TokenType.COMMA, TokenType.SEMICOLON], "Missing ',' or ';'")
     }
   }
+
+  if (!exit) parser.fail("Unexpected EOF")
 
   return pinInfos
 }

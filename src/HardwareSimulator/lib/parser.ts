@@ -3,7 +3,7 @@ import { HDLTokenizer, Token, TokenType } from "./HDLTokenizer";
 export class HDLParser {
   private input: HDLTokenizer
 
-  cur: Token = { literal: null, type: null }
+  token: Token = { literal: null, type: null }
   peek: Token = { literal: null, type: null }
 
   constructor(input: HDLTokenizer) {
@@ -13,7 +13,7 @@ export class HDLParser {
   }
 
   advance () {
-    this.cur = {...this.peek}
+    this.token = {...this.peek}
     this.input.advance()
     this.peek = {...this.input.token}
   }
@@ -23,7 +23,7 @@ export class HDLParser {
   }
 
   tokenIs (type: TokenType): boolean {
-    return this.cur.type === type
+    return this.token.type === type
   }
 
   peekTokenIs (type: TokenType): boolean {
