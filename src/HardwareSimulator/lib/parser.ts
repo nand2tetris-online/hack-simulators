@@ -18,6 +18,10 @@ export class HDLParser {
     this.peek = {...this.input.token}
   }
 
+  hasMoreTokens (): boolean {
+    return !this.tokenIs(TokenType.EOF)
+  }
+
   tokenIs (type: TokenType): boolean {
     return this.cur.type === type
   }
@@ -28,7 +32,7 @@ export class HDLParser {
 
   expectCurrent (type: TokenType, failMessage: string) {
     if (!this.tokenIs(type)) {
-      this.input.fail(failMessage)
+      this.fail(failMessage)
     }
   }
 
@@ -36,7 +40,19 @@ export class HDLParser {
     if (this.peekTokenIs(type)) {
       this.advance()
     } else {
-      this.input.fail(failMessage)
+      this.fail(failMessage)
     }
+  }
+
+  expectPeekOneOf (types: TokenType[], failMessage: string): void | never {
+    if (this.peek.type && types.includes(this.peek.type)) {
+      this.advance()
+    } else {
+      this.fail(failMessage)
+    }
+  }
+
+  fail (message: string): never {
+    this.input.fail(message)
   }
 }
