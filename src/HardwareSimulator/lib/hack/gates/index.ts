@@ -393,9 +393,9 @@ export function readHDL(parser: HDLParser): GateClass | never {
   // read {
   parser.expectPeek(TokenType.LBRACE, "Missing '{'")
   // read IN keyword
-  const inputPinsInfo = parser.peekTokenIs(TokenType.IN) ? getPinsInfo(parser) : []
+  const inputPinsInfo = parser.peekTokenIs(TokenType.IN) ? readPinsInfo(parser) : []
   // read OUT keyword
-  const outputPinsInfo = parser.peekTokenIs(TokenType.OUT) ? getPinsInfo(parser) : []
+  const outputPinsInfo = parser.peekTokenIs(TokenType.OUT) ? readPinsInfo(parser) : []
 
   // read BUILTIN or PARTS
   parser.advance()
@@ -410,7 +410,7 @@ export function readHDL(parser: HDLParser): GateClass | never {
   }
 }
 
-export function getPinsInfo(parser: HDLParser): PinInfo[] {
+export function readPinsInfo(parser: HDLParser): PinInfo[] {
   let pinInfos: PinInfo[] = []
   let exit = false
 
