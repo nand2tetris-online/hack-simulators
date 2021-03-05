@@ -37,14 +37,11 @@ export type PinsProps = {
   type: PinType 
   pinData: PinData[]
   updatePin: (data: PinUpdate) => void
+  base: number
 }
-export function Pins ({ title, type, pinData, updatePin }: PinsProps) {
+export function Pins ({ title, type, pinData, updatePin, base }: PinsProps) {
   const onChange = useCallback((value: string, number: number, type: PinType) => {
-    const v = parseInt(value) || 0
-    if (v > 1) {
-      return
-    }
-    updatePin({ value: v, number, type })
+    updatePin({ value, number, type })
   }, [updatePin])
 
   return (
@@ -54,7 +51,7 @@ export function Pins ({ title, type, pinData, updatePin }: PinsProps) {
         <tbody>
           {pinData.map((data, i) => {
             const { name, value } = data
-            return (<tr key={i}><td>{name}</td><td><input value={value.toString(2)} onChange={(e) => onChange(e.target.value, i, type)} /></td></tr>)
+            return (<tr key={i}><td>{name}</td><td><input value={value.toString(base)} onChange={(e) => onChange(e.target.value, i, type)} /></td></tr>)
           })}
         </tbody>
       </table>
@@ -63,7 +60,7 @@ export function Pins ({ title, type, pinData, updatePin }: PinsProps) {
 }
 
 export type PinUpdate = {
-  value: number
+  value: string
   number: number
   type: PinType
 }
@@ -133,7 +130,7 @@ export default function HardwareSimulator() {
   const updatePin = useCallback(({ value, number, type }: PinUpdate) => {
     // can only update input pins
     if (type !== PinType.INPUT) { return }
-    gate.current?.inputPins[number].set(value)
+    gate.current?.inputPins[number].set(parseInt(value) || 0)
     updatePinData()
   }, [updatePinData])
 
@@ -143,9 +140,9 @@ export default function HardwareSimulator() {
     <div>
       <h1>HardwareSimulator</h1>
       <Actions setHDLFile={setHDLFile} singleStep={singleStep} />
-      <Pins title="Input Pins" type={PinType.INPUT} pinData={pinData.input} updatePin={updatePin} />
-      <Pins title="Output Pins" type={PinType.OUTPUT} pinData={pinData.output} updatePin={updatePin} />
-      <Pins title="Internal Pins" type={PinType.INTERNAL} pinData={pinData.internal} updatePin={updatePin} />
+      <Pins title="Input Pins" type={PinType.INPUT} pinData={pinData.input} updatePin={updatePin} base={10} />
+      <Pins title="Output Pins" type={PinType.OUTPUT} pinData={pinData.output} updatePin={updatePin} base={2} />
+      <Pins title="Internal Pins" type={PinType.INTERNAL} pinData={pinData.internal} updatePin={updatePin} base={2} />
       <ChipName name={hdlFileName} />
       <HDLViewer hdl={hdl} />
       <StatusMessage status={status} />

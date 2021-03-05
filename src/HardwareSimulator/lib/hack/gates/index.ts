@@ -284,8 +284,19 @@ export class CompositeGateClass extends GateClass {
       parser.expectPeek(TokenType.IDENTIFIER, "A pin name is expected")
       const rightName = parser.token.literal ?? ""
 
+      let rightSubBus: SubBus | null = null
+      if (parser.peekTokenIs(TokenType.LBRACKET)) {
+        // read [
+        parser.advance()
+        parser.expectPeek(TokenType.INT, "Missing bus")
+        const subBus = parseInt(parser.token.literal ?? "")
+        rightSubBus = [subBus, subBus]
+        // read ]
+        parser.expectPeek(TokenType.RBRACKET, "Missing ']'")
+      }
+
       // make connection
-      this.addConnection(parser, partName, partNumber, leftName, rightName)
+      this.addConnection(parser, partName, partNumber, leftName, rightName, rightSubBus)
 
       // read , or )
       if (parser.peekTokenIs(TokenType.RPAREN)) {
@@ -299,7 +310,7 @@ export class CompositeGateClass extends GateClass {
     if (!endOfPins) parser.fail("Unexpected EOF")
   }
 
-  addConnection(parser: HDLParser, partName: string, partNumber: number, leftName: string, rightName: string): void | never {
+  addConnection(parser: HDLParser, partName: string, partNumber: number, leftName: string, rightName: string, rightSubBus: SubBus | null): void | never {
     const partGateClass = this.partsList[partNumber]
 
     const leftType = partGateClass.getPinType(leftName)
@@ -317,17 +328,6 @@ export class CompositeGateClass extends GateClass {
       this.registerPin(rightPinInfo, PinType.INTERNAL, rightNumber)
     } else {
       rightNumber = this.getPinNumber(rightName)
-    }
-
-    let rightSubBus: SubBus | null = null
-    if (parser.peekTokenIs(TokenType.LBRACKET)) {
-      // read [
-      parser.advance()
-      parser.expectPeek(TokenType.INT, "Missing bus")
-      const subBus = parseInt(parser.token.literal ?? "")
-      rightSubBus = [subBus, subBus]
-      // read ]
-      parser.expectPeek(TokenType.RBRACKET, "Missing ']'")
     }
 
     let connectionType: ConnectionType = ConnectionType.INVALID
