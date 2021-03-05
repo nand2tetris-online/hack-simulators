@@ -55,4 +55,8 @@ export class HDLParser {
   fail (message: string): never {
     this.input.fail(message)
   }
+
+  static fail (message: string): never {
+    HDLTokenizer.fail(message)
+  }
 }

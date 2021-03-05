@@ -5,14 +5,10 @@ export class Node {
 
     protected connections: Set<Node> | null = null
 
-    get() {
-        return this.value
-    }
+    get() { return this.value }
 
     set(value: number) {
-        if (value === this.value) {
-            return
-        }
+        if (value === this.value) return
         this.value = value
         for (let listener of this.connections ?? []) listener.set(this.get())
     }
@@ -73,11 +69,18 @@ export class Nand extends BuiltInGate {
     }
 }
 
+export class Not extends BuiltInGate {
+    reCompute() {
+        const _in = this.inputPins[0].get()
+        this.outputPins[0].set(~_in)
+    }
+}
+
 export type BuiltInDef = { hdl: string, gate: typeof BuiltInGate }
 export type BuiltIns = { [_: string]: BuiltInDef }
 
 const builtins: BuiltIns = {
-    NAND: {
+    Nand: {
         hdl: `
         // This file is part of www.nand2tetris.org
         // and the book "The Elements of Computing Systems"
@@ -96,6 +99,27 @@ const builtins: BuiltIns = {
             BUILTIN Nand;
         }`,
         gate: Nand
+    },
+    Not: {
+        hdl: `
+        // This file is part of the materials accompanying the book 
+        // "The Elements of Computing Systems" by Nisan and Schocken, 
+        // MIT Press. Book site: www.idc.ac.il/tecs
+        // File name: tools/builtIn/Not.hdl
+
+        /**
+            * Not gate. out = not in. 
+            */
+
+        CHIP Not {
+
+            IN  in;
+            OUT out;
+
+            BUILTIN Not;
+        }
+        `,
+        gate: Not
     }
 }
 

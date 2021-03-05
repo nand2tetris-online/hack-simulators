@@ -17,6 +17,40 @@ export enum ConnectionType {
   INVALID = "INVALID"
 }
 
+export type SubBus = [number, number]
+
+export class SubBusListeningAdapter extends Node {
+  target: Node
+  mask: number
+  shiftLeft: number
+
+  constructor(node: Node, low: number, high: number) {
+    super()
+    this.target = node
+    this.shiftLeft = low
+    this.mask = getMask(low, high)
+  }
+
+  set(value: number) {
+    const masked1 = this.target.get() & ~this.mask
+    const masked2 = (value << this.shiftLeft) & this.mask
+    this.target.set(masked1 | masked2)
+  }
+}
+
+// A helper array of powers of two
+export const powersOf2 = [1,2,4,8,16,32,64,128,256,512,1024,2048,4096, 8192,16384,-32768]
+
+export function getMask(low: number, high: number): number {
+  let mask = 0
+  let bitHolder = powersOf2[low]
+  for (let i = low; i<=high; i++) {
+    mask |= bitHolder
+    bitHolder = (bitHolder << 1)
+  }
+  return mask
+}
+
 export abstract class GateClass {
   namesToTypes: { [_: string]: PinType }
   namesToNumbers: { [_: string]: number }
@@ -33,7 +67,6 @@ export abstract class GateClass {
 
     this.inputPinsInfo = inputPinsInfo
     this.registerPins(inputPinsInfo, PinType.INPUT)
-
     this.outputPinsInfo = outputPinsInfo
     this.registerPins(outputPinsInfo, PinType.OUTPUT)
   }
@@ -86,6 +119,7 @@ export type Connection = {
   gatePinNumber: number
   partNumber: number
   partPinName: string
+  partSubBus: SubBus | null
 }
 
 export class BuiltInGateClass extends GateClass {
@@ -96,7 +130,11 @@ export class BuiltInGateClass extends GateClass {
     // read typescript class name
     parser.expectPeek(TokenType.IDENTIFIER, "Missing typescript class name")
     // TODO: support more than NAND
-    this.tsClassName = builtins.NAND.gate
+    switch (name) {
+      case "Not": this.tsClassName = builtins.Not.gate; break
+      case "Nand": this.tsClassName = builtins.Nand.gate; break
+      default: parser.fail(`Unexpected gate class name ${name}`)
+    }
     // read ';' symbol
     parser.expectPeek(TokenType.SEMICOLON, "Missing ';'")
     // read ';' symbol
@@ -121,9 +159,7 @@ export class CompositeGate extends Gate {
   }
 
   reCompute() {
-    for (let part of this.parts) {
-      part.eval()
-    }
+    for (let part of this.parts) part.eval()
   }
 
   getNode(name: string): Node | null {
@@ -131,9 +167,7 @@ export class CompositeGate extends Gate {
     if (!result) {
       const type = this.gateClass.getPinType(name)
       const index = this.gateClass.getPinNumber(name)
-      if (type === PinType.INTERNAL) {
-        return this.internalPins[index]
-      }
+      if (type === PinType.INTERNAL) return this.internalPins[index]
     }
     return result
   }
@@ -149,7 +183,6 @@ export class CompositeGateClass extends GateClass {
     this.partsList = []
     this.internalPinsInfo = []
     this.connections = new Set()
-
     this.readParts(parser)
   }
 
@@ -164,16 +197,18 @@ export class CompositeGateClass extends GateClass {
 
     // First scan
     let partNode: Node | null = null
+    let partSubBus: SubBus | null
     for (const connection of this.connections) {
       partNode = parts[connection.partNumber].getNode(connection.partPinName)
-      if (!partNode) { continue }
+      if (!partNode) continue
+      partSubBus = connection.partSubBus
 
       switch (connection.type) {
         case ConnectionType.FROM_INPUT:
-          this.connectGateToPart(inputNodes[connection.gatePinNumber], partNode)
+          this.connectGateToPart(inputNodes[connection.gatePinNumber], partNode, partSubBus)
           break
         case ConnectionType.TO_OUTPUT:
-          this.connectGateToPart(partNode, outputNodes[connection.gatePinNumber])
+          this.connectGateToPart(partNode, outputNodes[connection.gatePinNumber], partSubBus)
           break
         case ConnectionType.TO_INTERNAL:
           const target = new Node()
@@ -189,7 +224,7 @@ export class CompositeGateClass extends GateClass {
     // Second scan
     for (const connection of internalConnections) {
       partNode = parts[connection.partNumber].getNode(connection.partPinName)
-      if (!partNode) { continue }
+      if (!partNode) continue
       switch (connection.type) {
         case ConnectionType.FROM_INTERNAL:
           const source = internalNodes[connection.gatePinNumber]
@@ -201,8 +236,10 @@ export class CompositeGateClass extends GateClass {
     return new CompositeGate(inputNodes, outputNodes, internalNodes, this, parts)
   }
 
-  connectGateToPart(part: Node, gate: Node) {
-    part.connect(gate)
+  connectGateToPart(sourceNode: Node, targetNode: Node, targetSubBus: SubBus | null) {
+    let target = targetNode
+    if (targetSubBus) target = new SubBusListeningAdapter(target, ...targetSubBus)
+    sourceNode.connect(target)
   }
 
   readParts(parser: HDLParser) {
@@ -246,8 +283,10 @@ export class CompositeGateClass extends GateClass {
       // read right pin name
       parser.expectPeek(TokenType.IDENTIFIER, "A pin name is expected")
       const rightName = parser.token.literal ?? ""
+
       // make connection
       this.addConnection(parser, partName, partNumber, leftName, rightName)
+
       // read , or )
       if (parser.peekTokenIs(TokenType.RPAREN)) {
         endOfPins = true
@@ -264,9 +303,7 @@ export class CompositeGateClass extends GateClass {
     const partGateClass = this.partsList[partNumber]
 
     const leftType = partGateClass.getPinType(leftName)
-    if (leftType === PinType.UNKNOWN) {
-      parser.fail(`${leftName} is not a pin in ${partName}`)
-    }
+    if (leftType === PinType.UNKNOWN) parser.fail(`${leftName} is not a pin in ${partName}`)
 
     let rightType = this.getPinType(rightName)
     let rightNumber: number
@@ -280,6 +317,17 @@ export class CompositeGateClass extends GateClass {
       this.registerPin(rightPinInfo, PinType.INTERNAL, rightNumber)
     } else {
       rightNumber = this.getPinNumber(rightName)
+    }
+
+    let rightSubBus: SubBus | null = null
+    if (parser.peekTokenIs(TokenType.LBRACKET)) {
+      // read [
+      parser.advance()
+      parser.expectPeek(TokenType.INT, "Missing bus")
+      const subBus = parseInt(parser.token.literal ?? "")
+      rightSubBus = [subBus, subBus]
+      // read ]
+      parser.expectPeek(TokenType.RBRACKET, "Missing ']'")
     }
 
     let connectionType: ConnectionType = ConnectionType.INVALID
@@ -310,7 +358,13 @@ export class CompositeGateClass extends GateClass {
         break
     }
 
-    this.connections.add({ type: connectionType, gatePinNumber: rightNumber, partPinName: leftName, partNumber })
+    this.connections.add({
+      type: connectionType,
+      gatePinNumber: rightNumber,
+      partPinName: leftName,
+      partNumber,
+      partSubBus: rightSubBus
+    })
   }
 }
 
@@ -321,10 +375,13 @@ export function getGateClassHDL(hdl: string): GateClass | never {
 }
 
 export function getGateClassBuiltIn(name: string): GateClass | never {
-  // TODO: support more than Nand
-  if (name !== "Nand") HDLTokenizer.fail(`Unknown part type ${name}`)
-
-  return getGateClassHDL(builtins.NAND.hdl)
+  let hdl: string
+  switch (name) {
+    case "Nand": hdl = builtins.Nand.hdl; break
+    case "Not": hdl = builtins.Not.hdl; break
+    default: HDLParser.fail(`Invalid builtin gate class name: ${name}`)
+  }
+  return getGateClassHDL(hdl)
 }
 
 export function readHDL(parser: HDLParser): GateClass | never {
@@ -366,8 +423,18 @@ export function getPinsInfo(parser: HDLParser): PinInfo[] {
       // read pin name
       parser.expectPeek(TokenType.IDENTIFIER, "Missing pin name")
       const pinName = parser.token.literal ?? ""
-      // TODO: allow for [16] bus syntax
-      const pinWidth = 1
+      // read width or separator
+      let pinWidth = 1
+      if (parser.peekTokenIs(TokenType.LBRACKET)) {
+        // read [
+        parser.advance()
+        // read width
+        parser.expectPeek(TokenType.INT, "Missing width")
+        pinWidth = parseInt(parser.token.literal ?? "")
+        // read ]
+        parser.expectPeek(TokenType.RBRACKET, "Missing ']'")
+      }
+
       pinInfos.push({ name: pinName, width: pinWidth })
       // check separator
       parser.expectPeekOneOf([TokenType.COMMA, TokenType.SEMICOLON], "Missing ',' or ';'")

@@ -54,7 +54,7 @@ export function Pins ({ title, type, pinData, updatePin }: PinsProps) {
         <tbody>
           {pinData.map((data, i) => {
             const { name, value } = data
-            return (<tr key={i}><td>{name}</td><td><input value={value} onChange={(e) => onChange(e.target.value, i, type)} /></td></tr>)
+            return (<tr key={i}><td>{name}</td><td><input value={value.toString(2)} onChange={(e) => onChange(e.target.value, i, type)} /></td></tr>)
           })}
         </tbody>
       </table>
@@ -76,9 +76,8 @@ export type PinData = {
 export default function HardwareSimulator() {
   const [hdlFile, setHDLFile] = useState<File | null>(null)
   const [hdl, setHDL] = useState<string | null>(null)
-  const [status, setStatus] = useState<string | null>(null)
-
   const [pinData, setPinData] = useState<{ input: PinData[], output: PinData[], internal: PinData[] }>({ input: [], output: [], internal: [] })
+  const [status, setStatus] = useState<string | null>(null)
 
   const gate = useRef<Gate | null>(null)
 
@@ -115,13 +114,12 @@ export default function HardwareSimulator() {
   // parse hdl file contents into gate
   useEffect(() => {
     if (!hdl) { return }
-
     try {
       const aGateClass = getGateClassHDL(hdl)
       gate.current = aGateClass.newInstance()
-      console.log(gate.current)
       updatePinData()
       setStatus('Loaded successfully!')
+      console.log(gate.current)
     } catch (error) {
       setStatus(`${error}`)
     }
