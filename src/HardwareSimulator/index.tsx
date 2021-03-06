@@ -1,5 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
-import { CompositeGate, CompositeGateClass, Gate, getGateClassHDL, PinType } from './lib/hack/gates'
+import { Gate, PinType } from './lib/hack/gates'
+import { CompositeGate, CompositeGateClass } from './lib/hack/gates/composite'
+import { getGateClassHDL } from './lib/hack/gates/hdl'
 
 export type ActionsProps = {
   setHDLFile: (_: File | null) => void
