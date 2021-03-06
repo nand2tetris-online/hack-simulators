@@ -2,7 +2,7 @@ import { Gate, Connection, ConnectionType, GateClass, PinInfo, PinType } from ".
 import { TokenType } from "../../HDLTokenizer"
 import { HDLParser } from "../../parser"
 import { getGateClassBuiltIn } from "./hdl"
-import { Node, SubBus, SubBusListeningAdapter } from "./nodes"
+import { Node, SubBus, SubBusListeningAdapter, SubNode } from "./nodes"
 
 export class CompositeGate extends Gate {
   parts: Gate[]
@@ -54,21 +54,23 @@ export class CompositeGateClass extends GateClass {
 
     // First scan
     let partNode: Node | null = null
-    let partSubBus: SubBus | null
+    let gateSubBus: SubBus | null = null
+    let partSubBus: SubBus | null = null
     for (const connection of this.connections) {
       partNode = parts[connection.partNumber].getNode(connection.partPinName)
       if (!partNode) continue
+      gateSubBus = connection.gateSubBus
       partSubBus = connection.partSubBus
 
       switch (connection.type) {
         case ConnectionType.FROM_INPUT:
-          this.connectGateToPart(inputNodes[connection.gatePinNumber], partNode, partSubBus)
+          this.connectGateToPart(inputNodes[connection.gatePinNumber], gateSubBus, partNode, partSubBus)
           break
         case ConnectionType.TO_OUTPUT:
-          this.connectGateToPart(partNode, outputNodes[connection.gatePinNumber], partSubBus)
+          this.connectGateToPart(partNode, partSubBus, outputNodes[connection.gatePinNumber], gateSubBus)
           break
         case ConnectionType.TO_INTERNAL:
-          const target = new Node()
+          const target = !partSubBus ? new Node() : new SubNode(partSubBus)
           partNode.connect(target)
           internalNodes[connection.gatePinNumber] = target
           break
@@ -82,10 +84,17 @@ export class CompositeGateClass extends GateClass {
     for (const connection of internalConnections) {
       partNode = parts[connection.partNumber].getNode(connection.partPinName)
       if (!partNode) continue
+      partSubBus = connection.partSubBus
+
       switch (connection.type) {
         case ConnectionType.FROM_INTERNAL:
           const source = internalNodes[connection.gatePinNumber]
-          source.connect(partNode)
+          if (!partSubBus) {
+            source.connect(partNode)
+          } else {
+            const node = new SubBusListeningAdapter(partNode, partSubBus)
+            source.connect(node)
+          }
           break
       }
     }
@@ -93,10 +102,18 @@ export class CompositeGateClass extends GateClass {
     return new CompositeGate(inputNodes, outputNodes, internalNodes, this, parts)
   }
 
-  connectGateToPart(sourceNode: Node, targetNode: Node, targetSubBus: SubBus | null) {
+  connectGateToPart(sourceNode: Node, sourceSubBus: SubBus | null, targetNode: Node, targetSubBus: SubBus | null) {
     let target = targetNode
-    if (targetSubBus) target = new SubBusListeningAdapter(target, targetSubBus)
-    sourceNode.connect(target)
+    if (targetSubBus) {
+      target = new SubBusListeningAdapter(target, targetSubBus)
+    }
+    if (!sourceSubBus) {
+      sourceNode.connect(target)
+    } else {
+      const subNode = new SubNode(sourceSubBus)
+      sourceNode.connect(subNode)
+      subNode.connect(target)
+    }
   }
 
   readParts(parser: HDLParser) {
@@ -175,7 +192,7 @@ export class CompositeGateClass extends GateClass {
 
     let rightType = this.getPinType(rightName)
     let rightNumber: number
-    let rightPinInfo: PinInfo
+    let rightPinInfo: PinInfo | null
 
     if (rightType === PinType.UNKNOWN) {
       rightType = PinType.INTERNAL
@@ -185,6 +202,7 @@ export class CompositeGateClass extends GateClass {
       this.registerPin(rightPinInfo, PinType.INTERNAL, rightNumber)
     } else {
       rightNumber = this.getPinNumber(rightName)
+      rightPinInfo = this.getPinInfo(rightType, rightNumber)
     }
 
     let connectionType: ConnectionType = ConnectionType.INVALID
@@ -218,9 +236,10 @@ export class CompositeGateClass extends GateClass {
     this.connections.add({
       type: connectionType,
       gatePinNumber: rightNumber,
-      partPinName: leftName,
       partNumber,
-      partSubBus: rightSubBus
+      partPinName: leftName,
+      gateSubBus: rightSubBus,
+      partSubBus: null
     })
   }
 }

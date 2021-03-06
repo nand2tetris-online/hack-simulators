@@ -1,7 +1,11 @@
+export function toBinaryString(node: Node): string {
+    return node.get().toString(2).padStart(16, "0")
+}
+
 export class Node {
     value: Uint16Array
 
-    protected connections: Set<Node> | null = null
+    connections: Set<Node> | null = null
 
     constructor() {
         this.value = new Uint16Array(1)
@@ -24,10 +28,25 @@ export class Node {
     disconnect(node: Node) {
         if (this.connections) this.connections.delete(node)
     }
+}
 
-    toString(): string {
-        return this.value[0].toString(2).padStart(16, "0")
-    }
+export class SubNode extends Node {
+  mask: number
+  shiftRight: number
+
+  constructor([low, high]: SubBus) {
+    super()
+    this.mask = getMask(low, high)
+    this.shiftRight = low
+  }
+
+  set(value: number) {
+    super.set(value)
+  }
+
+  get(): number {
+    return (this.value[0] & this.mask) >>> this.shiftRight
+  }
 }
 
 export type SubBus = [low: number, high: number]
@@ -45,7 +64,7 @@ export class SubBusListeningAdapter extends Node {
   }
 
   get(): number {
-      return this.target.get()
+    return this.target.get()
   }
 
   set(value: number) {
@@ -53,19 +72,15 @@ export class SubBusListeningAdapter extends Node {
     const masked2 = (value << this.shiftLeft) & this.mask
     this.target.set(masked1 | masked2)
   }
-
-  toString(): string {
-    return this.target.toString()
-  }
 }
 
 // A helper array of powers of two
-export const POWERS_OF_2 = [1,2,4,8,16,32,64,128,256,512,1024,2048,4096, 8192,16384,-32768]
+export const POWERS_OF_2 = [1,2,4,8,16,32,64,128,256,512,1024,2048,4096,8192,16384,32768]
 
 export function getMask(low: number, high: number): number {
   let mask = 0
   let bitHolder = POWERS_OF_2[low]
-  for (let i = low; i<=high; i++) {
+  for (let i=low; i<=high; i++) {
     mask |= bitHolder
     bitHolder = (bitHolder << 1)
   }

@@ -38,9 +38,8 @@ export type PinsProps = {
   type: PinType 
   pinData: PinData[]
   updatePin: (data: PinUpdate) => void
-  base: number
 }
-export function Pins ({ title, type, pinData, updatePin, base }: PinsProps) {
+export function Pins ({ title, type, pinData, updatePin }: PinsProps) {
   const onChange = useCallback((value: string, number: number, type: PinType) => {
     updatePin({ value, number, type })
   }, [updatePin])
@@ -52,7 +51,10 @@ export function Pins ({ title, type, pinData, updatePin, base }: PinsProps) {
         <tbody>
           {pinData.map((data, i) => {
             const { name, value } = data
-            return (<tr key={i}><td>{name}</td><td><input value={value.toString(base)} onChange={(e) => onChange(e.target.value, i, type)} /></td></tr>)
+            return (<tr key={i}>
+                    <td>{name}</td>
+                    <td><input value={value} onChange={(e) => onChange(e.target.value, i, type)} /></td>
+                    </tr>)
           })}
         </tbody>
       </table>
@@ -68,7 +70,7 @@ export type PinUpdate = {
 
 export type PinData = {
   name: string
-  value: number
+  value: string
 }
 
 export default function HardwareSimulator() {
@@ -88,22 +90,35 @@ export default function HardwareSimulator() {
   }, [hdlFile])
 
   const updatePinData = useCallback(() => {
-    const input = gate.current?.inputPins.map((node, i) => ({
-      name: gate.current?.gateClass.inputPinsInfo[i].name ?? '',
-      value: node.value[0]
-    })) ?? []
+    const inputInfo = gate.current?.gateClass.inputPinsInfo ?? []
+    const input = gate.current?.inputPins.map((node, i) => {
+      if (!inputInfo[i]) {
+        throw new Error("no input info found")
+      }
+      return ({
+        name: inputInfo[i].name,
+        value: node.value[0].toString(),
+      })
+    }) ?? []
 
-    const output = gate.current?.outputPins.map((node, i) => ({
-      name: gate.current?.gateClass.outputPinsInfo[i].name ?? '',
-      value: node.value[0]
-    })) ?? []
+    const outputInfo = gate.current?.gateClass.outputPinsInfo ?? []
+    const output = gate.current?.outputPins.map((node, i) => {
+      if (!outputInfo[i]) {
+        throw new Error("no output info found")
+      }
+      return ({
+        name: outputInfo[i].name,
+        value: node.value[0].toString(2).padStart(outputInfo[i].width, "0"),
+      })
+    }) ?? []
 
     const compositeGate = gate.current as CompositeGate
     const compositeClass = compositeGate.gateClass as CompositeGateClass
 
+    const internalInfo = compositeClass.internalPinsInfo ?? []
     const internal = compositeGate.internalPins.map((node, i) => ({
-      name: compositeClass.internalPinsInfo[i].name ?? '',
-      value: node.value[0]
+      name: internalInfo[i].name,
+      value: node.value[0].toString(2).padStart(internalInfo[i].width, "0"),
     })) ?? []
 
     setPinData({ input, output, internal })
@@ -131,6 +146,7 @@ export default function HardwareSimulator() {
   const updatePin = useCallback(({ value, number, type }: PinUpdate) => {
     // can only update input pins
     if (type !== PinType.INPUT) { return }
+    console.log(parseInt(value).toString(2))
     gate.current?.inputPins[number].set(parseInt(value) || 0)
     updatePinData()
   }, [updatePinData])
@@ -141,9 +157,9 @@ export default function HardwareSimulator() {
     <div>
       <h1>HardwareSimulator</h1>
       <Actions setHDLFile={setHDLFile} singleStep={singleStep} />
-      <Pins title="Input Pins" type={PinType.INPUT} pinData={pinData.input} updatePin={updatePin} base={10} />
-      <Pins title="Output Pins" type={PinType.OUTPUT} pinData={pinData.output} updatePin={updatePin} base={2} />
-      <Pins title="Internal Pins" type={PinType.INTERNAL} pinData={pinData.internal} updatePin={updatePin} base={2} />
+      <Pins title="Input Pins" type={PinType.INPUT} pinData={pinData.input} updatePin={updatePin} />
+      <Pins title="Output Pins" type={PinType.OUTPUT} pinData={pinData.output} updatePin={updatePin} />
+      <Pins title="Internal Pins" type={PinType.INTERNAL} pinData={pinData.internal} updatePin={updatePin} />
       <ChipName name={hdlFileName} />
       <HDLViewer hdl={hdl} />
       <StatusMessage status={status} />

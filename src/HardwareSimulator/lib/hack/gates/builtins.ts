@@ -18,7 +18,7 @@ export class Nand extends BuiltInGate {
 export class Not extends BuiltInGate {
     reCompute() {
         const _in = this.inputPins[0].get()
-        this.outputPins[0].set(~_in)
+        this.outputPins[0].set(1 - _in)
     }
 }
 

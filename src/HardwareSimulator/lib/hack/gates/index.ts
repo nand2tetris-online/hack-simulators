@@ -117,5 +117,6 @@ export type Connection = {
     gatePinNumber: number
     partNumber: number
     partPinName: string
+    gateSubBus: SubBus | null
     partSubBus: SubBus | null
 }
