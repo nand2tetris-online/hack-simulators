@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
-import { CompositeGate, CompositeGateClass, getGateClassHDL, PinType } from './lib/hack/gates'
-import { Gate } from './lib/hack/gates/builtins'
+import { CompositeGate, CompositeGateClass, Gate, getGateClassHDL, PinType } from './lib/hack/gates'
 
 export type ActionsProps = {
   setHDLFile: (_: File | null) => void
@@ -81,7 +80,7 @@ export default function HardwareSimulator() {
   // load and set hdl file contents
   useEffect(() => {
     (async () => {
-      if (!hdlFile) { return }
+      if (!hdlFile) return
       setHDL(await hdlFile.text())
     })()
   }, [hdlFile])
@@ -89,12 +88,12 @@ export default function HardwareSimulator() {
   const updatePinData = useCallback(() => {
     const input = gate.current?.inputPins.map((node, i) => ({
       name: gate.current?.gateClass.inputPinsInfo[i].name ?? '',
-      value: node.value
+      value: node.value[0]
     })) ?? []
 
     const output = gate.current?.outputPins.map((node, i) => ({
       name: gate.current?.gateClass.outputPinsInfo[i].name ?? '',
-      value: node.value
+      value: node.value[0]
     })) ?? []
 
     const compositeGate = gate.current as CompositeGate
@@ -102,7 +101,7 @@ export default function HardwareSimulator() {
 
     const internal = compositeGate.internalPins.map((node, i) => ({
       name: compositeClass.internalPinsInfo[i].name ?? '',
-      value: node.value
+      value: node.value[0]
     })) ?? []
 
     setPinData({ input, output, internal })

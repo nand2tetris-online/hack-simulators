@@ -1,6 +1,5 @@
 import { HDLTokenizer, TokenType } from "../../HDLTokenizer"
 import { HDLParser } from "../../parser"
-import builtins, { BuiltInGate, Gate, Node } from "./builtins"
 
 export enum PinType {
   INPUT = "INPUT",
@@ -8,6 +7,140 @@ export enum PinType {
   INTERNAL = "INTERNAL",
   UNKNOWN = "UNKNOWN"
 }
+
+export class Node {
+    value: Uint16Array
+
+    protected connections: Set<Node> | null = null
+
+    constructor() {
+        this.value = new Uint16Array(1)
+    }
+
+    get() { return this.value[0] }
+
+    set(value: number) {
+        if (value === this.value[0]) return
+        this.value[0] = value
+        for (let listener of this.connections ?? [])
+            listener.set(this.get())
+    }
+
+    connect(node: Node) {
+        if (!this.connections) this.connections = new Set()
+        this.connections.add(node)
+    }
+
+    disconnect(node: Node) {
+        if (this.connections) this.connections.delete(node)
+    }
+
+    toString(): string {
+        return this.value[0].toString(2).padStart(16, "0")
+    }
+}
+
+export abstract class Gate {
+    gateClass: GateClass
+    inputPins: Node[]
+    outputPins: Node[]
+
+    constructor(inputPins: Node[], outputPins: Node[], gateClass: GateClass) {
+        this.inputPins = inputPins
+        this.outputPins = outputPins
+        this.gateClass = gateClass
+    }
+
+    abstract reCompute(): void
+
+    getNode(name: string): Node | null {
+        const type = this.gateClass.getPinType(name)
+        const index = this.gateClass.getPinNumber(name)
+        switch (type) {
+            case PinType.INPUT:
+                return this.inputPins[index]
+            case PinType.OUTPUT:
+                return this.outputPins[index]
+        }
+        return null
+    }
+
+    eval() {
+        this.doEval()
+    }
+    
+    doEval() {
+        this.reCompute()
+    }
+}
+
+export class BuiltInGate extends Gate {
+    reCompute() {}
+}
+
+export class Nand extends BuiltInGate {
+    reCompute() {
+        const a = this.inputPins[0].get()
+        const b = this.inputPins[1].get()
+        this.outputPins[0].set(0x1 - (a & b))
+    }
+}
+
+export class Not extends BuiltInGate {
+    reCompute() {
+        const _in = this.inputPins[0].get()
+        this.outputPins[0].set(~_in)
+    }
+}
+
+export type BuiltInDef = { hdl: string, gate: typeof BuiltInGate }
+export type BuiltIns = { [_: string]: BuiltInDef }
+
+const builtins: BuiltIns = {
+    Nand: {
+        hdl: `
+        // This file is part of www.nand2tetris.org
+        // and the book "The Elements of Computing Systems"
+        // by Nisan and Schocken, MIT Press.
+        // File name: tools/builtIn/Nand.hdl
+
+        /**
+            * Nand gate: out = a Nand b.
+            */
+
+        CHIP Nand {
+
+            IN  a, b;
+            OUT out;
+
+            BUILTIN Nand;
+        }`,
+        gate: Nand
+    },
+    Not: {
+        hdl: `
+        // This file is part of the materials accompanying the book 
+        // "The Elements of Computing Systems" by Nisan and Schocken, 
+        // MIT Press. Book site: www.idc.ac.il/tecs
+        // File name: tools/builtIn/Not.hdl
+
+        /**
+            * Not gate. out = not in. 
+            */
+
+        CHIP Not {
+
+            IN  in;
+            OUT out;
+
+            BUILTIN Not;
+        }
+        `,
+        gate: Not
+    }
+}
+
+export default builtins
 
 export enum ConnectionType {
   FROM_INPUT = "FROM_INPUT",
@@ -31,10 +164,18 @@ export class SubBusListeningAdapter extends Node {
     this.mask = getMask(low, high)
   }
 
+  get(): number {
+      return this.target.get()
+  }
+
   set(value: number) {
     const masked1 = this.target.get() & ~this.mask
     const masked2 = (value << this.shiftLeft) & this.mask
     this.target.set(masked1 | masked2)
+  }
+
+  toString(): string {
+    return this.target.toString()
   }
 }
 
