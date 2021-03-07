@@ -93,6 +93,36 @@ export class DMux4Way extends BuiltInGate {
     }
 }
 
+// CH2
+
+export class HalfAdder extends BuiltInGate {
+    reCompute() {
+        const a = this.inputPins[0].get()
+        const b = this.inputPins[1].get()
+        this.outputPins[0].set(a ^ b)
+        this.outputPins[1].set(a & b)
+    }
+}
+
+export class FullAdder extends BuiltInGate {
+    reCompute() {
+        const a = this.inputPins[0].get()
+        const b = this.inputPins[1].get()
+        const c = this.inputPins[2].get()
+        const sum = a + b + c
+        this.outputPins[0].set(sum % 2)
+        this.outputPins[1].set(sum / 2)
+    }
+}
+
+export class Add16 extends BuiltInGate {
+    reCompute() {
+        const a = this.inputPins[0].get()
+        const b = this.inputPins[1].get()
+        this.outputPins[0].set(a + b)
+    }
+}
+
 export type BuiltInDef = { hdl: string, gate: typeof BuiltInGate }
 export type BuiltIns = { [_: string]: BuiltInDef }
 
@@ -136,7 +166,20 @@ export const builtins: BuiltIns = {
     DMux4Way: {
       hdl: `CHIP DMux4Way { IN  in, sel[2]; OUT a, b, c, d; BUILTIN DMux4Way; }`,
       gate: DMux4Way
-    }
+    },
+    // CH2
+    HalfAdder: {
+      hdl: `CHIP HalfAdder { IN  a, b; OUT sum, carry; BUILTIN HalfAdder; }`,
+      gate: HalfAdder
+    },
+    FullAdder: {
+      hdl: `CHIP FullAdder { IN  a, b, c; OUT sum, carry; BUILTIN FullAdder; }`,
+      gate: FullAdder
+    },
+    Add16: {
+      hdl: `CHIP Add16 { IN  a[16], b[16]; OUT out[16]; BUILTIN Add16; }`,
+      gate: Add16
+    },
 }
 
 export class BuiltInGateClass extends GateClass {
@@ -148,6 +191,7 @@ export class BuiltInGateClass extends GateClass {
     parser.expectPeek(TokenType.IDENTIFIER, "Missing typescript class name")
     // TODO: support more than NAND
     switch (name) {
+      // CH1
       case "Nand": this.tsClassName = builtins.Nand.gate; break
       case "Not": this.tsClassName = builtins.Not.gate; break
       case "And": this.tsClassName = builtins.And.gate; break
@@ -158,6 +202,10 @@ export class BuiltInGateClass extends GateClass {
       case "Mux4Way16": this.tsClassName = builtins.Mux4Way16.gate; break
       case "DMux": this.tsClassName = builtins.DMux.gate; break
       case "DMux4Way": this.tsClassName = builtins.DMux4Way.gate; break
+      // CH2
+      case "HalfAdder": this.tsClassName = builtins.HalfAdder.gate; break
+      case "FullAdder": this.tsClassName = builtins.FullAdder.gate; break
+      case "Add16": this.tsClassName = builtins.Add16.gate; break
       default: parser.fail(`Unexpected gate class name ${name}`)
     }
     // read ';' symbol
