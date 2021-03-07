@@ -270,8 +270,8 @@ export class BuiltInGateClass extends GateClass {
   }
 
   newInstance(): Gate {
-    const inputNodes: Node[] = this.inputPinsInfo.map((i) => new Node(i.name))
-    const outputNodes: Node[] = this.outputPinsInfo.map((i) => new Node(i.name))
+    const inputNodes: Node[] = this.inputPinsInfo.map((_) => new Node())
+    const outputNodes: Node[] = this.outputPinsInfo.map((_) => new Node())
     return new this.tsClassName(inputNodes, outputNodes, this)
   }
 }

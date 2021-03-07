@@ -46,9 +46,9 @@ export class CompositeGateClass extends GateClass {
   newInstance(): Gate {
     const parts: Gate[] = this.partsList.map((partClass) => partClass.newInstance())
 
-    const inputNodes = this.inputPinsInfo.map((i) => new Node(i.name))
-    const outputNodes = this.outputPinsInfo.map((i) => new Node(i.name))
-    const internalNodes = this.internalPinsInfo.map((i) => new Node(i.name))
+    const inputNodes = this.inputPinsInfo.map((_) => new Node())
+    const outputNodes = this.outputPinsInfo.map((_) => new Node())
+    const internalNodes = this.internalPinsInfo.map((_) => new Node())
 
     const internalConnections = new Set<Connection>()
 
@@ -70,8 +70,7 @@ export class CompositeGateClass extends GateClass {
           this.connectGateToPart(partNode, partSubBus, outputNodes[connection.gatePinNumber], gateSubBus)
           break
         case ConnectionType.TO_INTERNAL:
-          const name = this.internalPinsInfo[connection.gatePinNumber].name
-          const target = partSubBus === null ? new Node(name) : new SubNode(partSubBus)
+          const target = partSubBus === null ? new Node() : new SubNode(partSubBus)
           partNode.connect(target)
           internalNodes[connection.gatePinNumber] = target
           break

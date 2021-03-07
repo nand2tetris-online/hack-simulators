@@ -3,13 +3,11 @@ export function toBinaryString(node: Node): string {
 }
 
 export class Node {
-    name: string
     value: Uint16Array
 
     connections: Set<Node> | null = null
 
-    constructor(name: string = "unknown") {
-        this.name = name
+    constructor() {
         this.value = new Uint16Array(1)
     }
 
