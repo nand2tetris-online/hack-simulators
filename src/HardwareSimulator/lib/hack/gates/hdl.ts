@@ -20,6 +20,7 @@ export function getGateClassBuiltIn(name: string): GateClass | never {
         case "Xor": hdl = builtins.Xor.hdl; break
         case "Mux": hdl = builtins.Mux.hdl; break
         case "Mux16": hdl = builtins.Mux16.hdl; break
+        case "Mux4Way16": hdl = builtins.Mux4Way16.hdl; break
         case "DMux": hdl = builtins.DMux.hdl; break
         case "DMux4Way": hdl = builtins.DMux4Way.hdl; break
         default: HDLParser.fail(`Invalid builtin gate class name: ${name}`)

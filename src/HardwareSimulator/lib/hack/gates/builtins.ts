@@ -55,6 +55,24 @@ export class Mux extends BuiltInGate {
     }
 }
 
+export class Mux4Way16 extends BuiltInGate {
+    reCompute() {
+        const a = this.inputPins[0].get()
+        const b = this.inputPins[1].get()
+        const c = this.inputPins[2].get()
+        const d = this.inputPins[3].get()
+        const sel = this.inputPins[4].get()
+        let out = 0
+        switch (sel) {
+            case 0: out = a; break
+            case 1: out = b; break
+            case 2: out = c; break
+            case 3: out = d; break
+        }
+        this.outputPins[0].set(out)
+    }
+}
+
 export class DMux extends BuiltInGate {
     reCompute() {
         const _in = this.inputPins[0].get()
@@ -107,6 +125,10 @@ export const builtins: BuiltIns = {
       hdl: `CHIP Mux16 { IN  a[16], b[16], sel; OUT out[16]; BUILTIN Mux; }`,
       gate: Mux
     },
+    Mux4Way16: {
+      hdl: ` CHIP Mux4Way16 { IN a[16], b[16], c[16], d[16], sel[2]; OUT out[16]; BUILTIN Mux4Way16; }`,
+      gate: Mux4Way16
+    },
     DMux: {
       hdl: `CHIP DMux { IN  in, sel; OUT a, b; BUILTIN DMux; }`,
       gate: DMux
@@ -133,6 +155,7 @@ export class BuiltInGateClass extends GateClass {
       case "Xor": this.tsClassName = builtins.Xor.gate; break
       case "Mux": this.tsClassName = builtins.Mux.gate; break
       case "Mux16": this.tsClassName = builtins.Mux16.gate; break
+      case "Mux4Way16": this.tsClassName = builtins.Mux4Way16.gate; break
       case "DMux": this.tsClassName = builtins.DMux.gate; break
       case "DMux4Way": this.tsClassName = builtins.DMux4Way.gate; break
       default: parser.fail(`Unexpected gate class name ${name}`)

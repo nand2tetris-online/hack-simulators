@@ -163,8 +163,18 @@ export class CompositeGateClass extends GateClass {
         // read [
         parser.advance()
         parser.expectPeek(TokenType.INT, "Missing bus")
-        const subBus = parseInt(parser.token.literal ?? "")
-        rightSubBus = [subBus, subBus]
+        const low = parseInt(parser.token.literal ?? "")
+        let high = low
+        if (parser.peekTokenIs(TokenType.DOT)) {
+          // read .
+          parser.advance()
+          // read .
+          parser.expectPeek(TokenType.DOT, "Expected '..'")
+          // read high
+          parser.expectPeek(TokenType.INT, "Expected high sub bus")
+          high = parseInt(parser.token.literal ?? "")
+        }
+        rightSubBus = [low, high]
         // read ]
         parser.expectPeek(TokenType.RBRACKET, "Missing ']'")
       }
