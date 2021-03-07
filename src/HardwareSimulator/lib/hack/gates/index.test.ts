@@ -1,8 +1,7 @@
 import { HDLTokenizer } from "../../HDLTokenizer"
 import { HDLParser } from "../../parser"
-import { CompositeGateClass } from "./composite"
 import { readHDL } from "./hdl"
-import { Node, POWERS_OF_2, SubBusListeningAdapter, SubNode, toBinaryString } from "./nodes"
+import { Node, SubBusListeningAdapter, SubNode, toBinaryString } from "./nodes"
 
 describe("Node", () => {
     it("does it", () => {
@@ -124,5 +123,22 @@ CHIP Not1 {
         expect(gate.inputPins[0].get()).toEqual(7)
         gate.eval()
         expect(gate.outputPins[0].get()).toEqual(0)
+    })
+})
+
+describe("Multi Bit Wide Internal Pins", () => {
+    it("works", () => {
+        const not16 = `CHIP ALU { IN  in[16]; OUT out[16]; PARTS: Not16(in=in, out=fout); Not16(in=fout, out=out); }`
+        const parser = new HDLParser(new HDLTokenizer(not16))
+        const gateClass = readHDL(parser)
+        const gate = gateClass.newInstance()
+
+        expect(gate).not.toBeNull()
+
+        gate.inputPins[0].set(5)
+
+        gate.eval()
+
+        expect(gate.outputPins[0].get()).toEqual(0b0000000000000101)
     })
 })

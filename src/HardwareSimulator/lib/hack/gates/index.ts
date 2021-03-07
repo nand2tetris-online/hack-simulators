@@ -109,6 +109,8 @@ export enum ConnectionType {
     TO_OUTPUT = "TO_OUTPUT",
     FROM_INTERNAL = "FROM_INTERNAL",
     TO_INTERNAL = "TO_INTERNAL",
+    FROM_TRUE = "FROM_TRUE",
+    FROM_FALSE = "FROM_FALSE",
     INVALID = "INVALID"
 }
 

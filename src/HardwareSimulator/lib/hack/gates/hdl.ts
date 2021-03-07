@@ -16,18 +16,23 @@ export function getGateClassBuiltIn(name: string): GateClass | never {
         // Ch1
         case "Nand": hdl = builtins.Nand.hdl; break
         case "Not": hdl = builtins.Not.hdl; break
+        case "Not16": hdl = builtins.Not16.hdl; break
         case "And": hdl = builtins.And.hdl; break
+        case "And16": hdl = builtins.And16.hdl; break
         case "Or": hdl = builtins.Or.hdl; break
+        case "Or16": hdl = builtins.Or16.hdl; break
         case "Xor": hdl = builtins.Xor.hdl; break
         case "Mux": hdl = builtins.Mux.hdl; break
         case "Mux16": hdl = builtins.Mux16.hdl; break
         case "Mux4Way16": hdl = builtins.Mux4Way16.hdl; break
         case "DMux": hdl = builtins.DMux.hdl; break
         case "DMux4Way": hdl = builtins.DMux4Way.hdl; break
+        case "Or8Way": hdl = builtins.Or8Way.hdl; break
         // Ch2
         case "HalfAdder": hdl = builtins.HalfAdder.hdl; break
         case "FullAdder": hdl = builtins.FullAdder.hdl; break
         case "Add16": hdl = builtins.Add16.hdl; break
+        case "Inc16": hdl = builtins.Inc16.hdl; break
         default: HDLParser.fail(`Invalid builtin gate class name: ${name}`)
     }
     return getGateClassHDL(hdl)

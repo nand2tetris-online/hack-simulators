@@ -146,7 +146,6 @@ export default function HardwareSimulator() {
   const updatePin = useCallback(({ value, number, type }: PinUpdate) => {
     // can only update input pins
     if (type !== PinType.INPUT) { return }
-    console.log(parseInt(value).toString(2))
     gate.current?.inputPins[number].set(parseInt(value) || 0)
     updatePinData()
   }, [updatePinData])
