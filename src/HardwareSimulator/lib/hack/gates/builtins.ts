@@ -62,15 +62,6 @@ export class Mux extends BuiltInGate {
     }
 }
 
-export class Mux16 extends BuiltInGate {
-    reCompute() {
-        const a = this.inputPins[0].get()
-        const b = this.inputPins[1].get()
-        const sel = this.inputPins[2].get()
-        this.outputPins[0].set(sel === 0 ? a : b)
-    }
-}
-
 export class Mux4Way16 extends BuiltInGate {
     reCompute() {
         const a = this.inputPins[0].get()
@@ -195,7 +186,7 @@ export const builtins: BuiltIns = {
     },
     Mux16: {
       hdl: `CHIP Mux16 { IN  a[16], b[16], sel; OUT out[16]; BUILTIN Mux; }`,
-      gate: Mux16
+      gate: Mux
     },
     Mux4Way16: {
       hdl: ` CHIP Mux4Way16 { IN a[16], b[16], c[16], d[16], sel[2]; OUT out[16]; BUILTIN Mux4Way16; }`,
