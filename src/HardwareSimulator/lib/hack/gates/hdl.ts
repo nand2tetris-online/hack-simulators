@@ -13,7 +13,7 @@ export function getGateClassHDL(hdl: string): GateClass | never {
 export function getGateClassBuiltIn(name: string): GateClass | never {
     let hdl: string
     switch (name) {
-        // Ch1
+        // CH1
         case "Nand": hdl = builtins.Nand.hdl; break
         case "Not": hdl = builtins.Not.hdl; break
         case "Not16": hdl = builtins.Not16.hdl; break
@@ -28,11 +28,13 @@ export function getGateClassBuiltIn(name: string): GateClass | never {
         case "DMux": hdl = builtins.DMux.hdl; break
         case "DMux4Way": hdl = builtins.DMux4Way.hdl; break
         case "Or8Way": hdl = builtins.Or8Way.hdl; break
-        // Ch2
+        // CH2
         case "HalfAdder": hdl = builtins.HalfAdder.hdl; break
         case "FullAdder": hdl = builtins.FullAdder.hdl; break
         case "Add16": hdl = builtins.Add16.hdl; break
         case "Inc16": hdl = builtins.Inc16.hdl; break
+        // CH3
+        case "DFF": hdl = builtins.DFF.hdl; break
         default: HDLParser.fail(`Invalid builtin gate class name: ${name}`)
     }
     return getGateClassHDL(hdl)
@@ -75,7 +77,7 @@ export function readPinsInfo(parser: HDLParser): PinInfo[] {
       exit = true
     } else {
       // read pin name
-      parser.expectPeek(TokenType.IDENTIFIER, "Missing pin name")
+      parser.expectPeek(TokenType.IDENTIFIER, `Missing pin name, found ${parser.peek.literal}`)
       const pinName = parser.token.literal ?? ""
       // read width or separator
       let pinWidth = 1

@@ -8,6 +8,7 @@ export enum TokenType {
   OUT = 'OUT',
   PARTS = 'PARTS',
   BUILTIN = 'BUILTIN',
+  CLOCKED = 'CLOCKED',
 
   INT = 'INT',
   LBRACE = 'LBRACE',
@@ -54,6 +55,7 @@ export class HDLTokenizer {
       OUT: TokenType.OUT,
       PARTS: TokenType.PARTS,
       BUILTIN: TokenType.BUILTIN,
+      CLOCKED: TokenType.CLOCKED,
       true: TokenType.TRUE,
       false: TokenType.FALSE
     }

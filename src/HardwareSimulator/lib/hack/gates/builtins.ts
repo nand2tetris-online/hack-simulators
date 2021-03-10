@@ -2,6 +2,7 @@ import { TokenType } from "../../HDLTokenizer"
 import { HDLParser } from "../../parser"
 import { Gate, GateClass, PinInfo } from "."
 import { Node } from "./nodes"
+import { readPinsInfo } from "./hdl"
 
 export class BuiltInGate extends Gate {
     reCompute() {}
@@ -221,6 +222,11 @@ export const builtins: BuiltIns = {
       hdl: `CHIP Inc16 { IN  in[16]; OUT out[16]; BUILTIN Inc16; }`,
       gate: Inc16
     },
+    // CH3
+    DFF: {
+        hdl: `CHIP DFF { IN  in; OUT out; BUILTIN DFF; CLOCKED in; }`,
+        gate: Inc16
+    }
 }
 
 export class BuiltInGateClass extends GateClass {
@@ -252,11 +258,40 @@ export class BuiltInGateClass extends GateClass {
       case "FullAdder": this.tsClassName = builtins.FullAdder.gate; break
       case "Add16": this.tsClassName = builtins.Add16.gate; break
       case "Inc16": this.tsClassName = builtins.Inc16.gate; break
+      // CH3
+      case "DFF": this.tsClassName = builtins.DFF.gate; break
       default: parser.fail(`Unexpected gate class name ${name}`)
     }
     // read ';' symbol
     parser.expectPeek(TokenType.SEMICOLON, "Missing ';'")
-    // read ';' symbol
+
+    this.isInputClocked = new Array(inputPinsInfo.length)
+    this.isOutputClocked = new Array(outputPinsInfo.length)
+
+    if (parser.peekTokenIs(TokenType.CLOCKED)) {
+        this.isClocked = true
+        const clockedPins = readPinsInfo(parser)
+        for (let i=0; i<clockedPins.length; i++) {
+            let inputFound = false
+            let outputFound = false
+            for (let j=0; j<this.isInputClocked.length && !inputFound; j++) {
+                if (!this.isInputClocked[j]) {
+                    inputFound = inputPinsInfo[j].name === clockedPins[i].name
+                    this.isInputClocked[j] = inputFound
+                }
+            }
+            if (!inputFound) {
+                for (let j=0; j<this.isOutputClocked.length && !outputFound; j++) {
+                    if (!this.isOutputClocked[j]) {
+                        outputFound = outputPinsInfo[j].name === clockedPins[j].name
+                        this.isOutputClocked[j] = outputFound
+                    }
+                }
+            }
+        }
+    }
+
+    // read '}' symbol
     parser.expectPeek(TokenType.RBRACE, "Missing '}'")
   }
 

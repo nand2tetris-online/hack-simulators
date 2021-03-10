@@ -55,6 +55,10 @@ export abstract class GateClass {
     inputPinsInfo: PinInfo[]
     outputPinsInfo: PinInfo[]
 
+    isClocked: boolean
+    isInputClocked: boolean[]
+    isOutputClocked: boolean[]
+
     constructor(name: string, inputPinsInfo: PinInfo[], outputPinsInfo: PinInfo[]) {
         this.name = name
         this.namesToTypes = {}
@@ -64,6 +68,10 @@ export abstract class GateClass {
         this.registerPins(inputPinsInfo, PinType.INPUT)
         this.outputPinsInfo = outputPinsInfo
         this.registerPins(outputPinsInfo, PinType.OUTPUT)
+
+        this.isClocked = false
+        this.isInputClocked = []
+        this.isOutputClocked = []
     }
 
     abstract newInstance(): Gate
