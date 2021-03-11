@@ -35,6 +35,7 @@ export function getGateClassBuiltIn(name: string): GateClass | never {
         case "Inc16": hdl = builtins.Inc16.hdl; break
         // CH3
         case "DFF": hdl = builtins.DFF.hdl; break
+        case "Bit": hdl = builtins.Bit.hdl; break
         default: HDLParser.fail(`Invalid builtin gate class name: ${name}`)
     }
     return getGateClassHDL(hdl)

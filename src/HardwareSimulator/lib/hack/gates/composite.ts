@@ -12,10 +12,28 @@ export class CompositeGate extends Gate {
     super(inputPins, outputPins, gateClass)
     this.internalPins = internalPins
     this.parts = parts
+    console.log(this.parts)
   }
 
   reCompute() {
     for (let part of this.parts) part.eval()
+  }
+
+  clockUp() {
+    console.log("CompositeGate.clockUp()", this.gateClass.isClocked)
+    if (this.gateClass.isClocked) {
+      console.log("parts.length", this.parts.length)
+      for (const part of this.parts) {
+        console.log("part.tock()", part)
+        part.tock()
+      }
+    }
+  }
+
+  clockDown() {
+    console.log("CompositeGate clockDown")
+    if (this.gateClass.isClocked)
+      for (const part of this.parts) part.tick()
   }
 
   getNode(name: string): Node | null {
@@ -158,6 +176,7 @@ export class CompositeGateClass extends GateClass {
         const gateClass = getGateClassBuiltIn(partName)
         const partNumber = this.partsList.length
         this.partsList.push(gateClass)
+        this.isClocked = this.isClocked || gateClass.isClocked
         // read (
         parser.expectPeek(TokenType.LPAREN, "Missing '('")
         // read pins

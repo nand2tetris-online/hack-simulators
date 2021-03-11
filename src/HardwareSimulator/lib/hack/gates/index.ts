@@ -24,6 +24,8 @@ export abstract class Gate {
     }
 
     abstract reCompute(): void
+    abstract clockUp(): void
+    abstract clockDown(): void
 
     getNode(name: string): Node | null {
         const type = this.gateClass.getPinType(name)
@@ -35,6 +37,18 @@ export abstract class Gate {
                 return this.outputPins[index]
         }
         return null
+    }
+
+    tick() {
+        console.log("Gate tick()")
+        this.doEval()
+        this.clockUp()
+    }
+
+    tock() {
+        console.log("Gate tock()")
+        this.clockDown()
+        this.doEval()
     }
 
     eval() {

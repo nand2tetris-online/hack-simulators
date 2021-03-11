@@ -6,6 +6,8 @@ import { readPinsInfo } from "./hdl"
 
 export class BuiltInGate extends Gate {
     reCompute() {}
+    clockUp() {}
+    clockDown() {}
 }
 
 export class Nand extends BuiltInGate {
@@ -145,6 +147,44 @@ export class Inc16 extends BuiltInGate {
     }
 }
 
+// CH3
+
+export class DFF extends BuiltInGate {
+    state: number
+
+    constructor(inputPins: Node[], outputPins: Node[], gateClass: GateClass) {
+        super(inputPins, outputPins, gateClass)
+        this.state = 0
+    }
+
+    clockUp() {
+        this.state = this.inputPins[0].get()
+    }
+
+    clockDown() {
+        this.outputPins[0].set(this.state)
+    }
+}
+
+export class Bit extends BuiltInGate {
+    state: number
+
+    constructor(inputPins: Node[], outputPins: Node[], gateClass: GateClass) {
+        super(inputPins, outputPins, gateClass)
+        this.state = 0
+    }
+
+    clockUp() {
+        const load = this.inputPins[1].get()
+        if (load === 1)
+            this.state = this.inputPins[0].get()
+    }
+
+    clockDown() {
+        this.outputPins[0].set(this.state)
+    }
+}
+
 export type BuiltInDef = { hdl: string, gate: typeof BuiltInGate }
 export type BuiltIns = { [_: string]: BuiltInDef }
 
@@ -225,7 +265,11 @@ export const builtins: BuiltIns = {
     // CH3
     DFF: {
         hdl: `CHIP DFF { IN  in; OUT out; BUILTIN DFF; CLOCKED in; }`,
-        gate: Inc16
+        gate: DFF
+    },
+    Bit: {
+        hdl: `CHIP Bit { IN  in, load; OUT out; BUILTIN Bit; CLOCKED in, load; }`,
+        gate: Bit
     }
 }
 
@@ -259,7 +303,8 @@ export class BuiltInGateClass extends GateClass {
       case "Add16": this.tsClassName = builtins.Add16.gate; break
       case "Inc16": this.tsClassName = builtins.Inc16.gate; break
       // CH3
-      case "DFF": this.tsClassName = builtins.DFF.gate; break
+      case "DFF": this.tsClassName = builtins.DFF.gate; break // REQUIRED BUILTIN
+      case "Bit": this.tsClassName = builtins.Bit.gate; break
       default: parser.fail(`Unexpected gate class name ${name}`)
     }
     // read ';' symbol

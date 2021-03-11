@@ -79,6 +79,8 @@ export default function HardwareSimulator() {
   const [pinData, setPinData] = useState<{ input: PinData[], output: PinData[], internal: PinData[] }>({ input: [], output: [], internal: [] })
   const [status, setStatus] = useState<string | null>(null)
 
+  const [clockUp, setClockUp] = useState(false)
+
   const gate = useRef<Gate | null>(null)
 
   // load and set hdl file contents
@@ -139,9 +141,18 @@ export default function HardwareSimulator() {
   }, [hdl, updatePinData])
 
   const singleStep = useCallback(() => {
-    gate.current?.eval()
+    console.log('singleStep')
+    if (clockUp) {
+      // perform tock
+      gate.current?.tock()
+      setClockUp(false)
+    } else {
+      // perform tick
+      gate.current?.tick()
+      setClockUp(true)
+    }
     updatePinData()
-  }, [updatePinData])
+  }, [updatePinData, clockUp, setClockUp])
 
   const updatePin = useCallback(({ value, number, type }: PinUpdate) => {
     // can only update input pins
