@@ -25,17 +25,31 @@ export function getGateClassBuiltIn(name: string): GateClass | never {
         case "Mux": hdl = builtins.Mux.hdl; break
         case "Mux16": hdl = builtins.Mux16.hdl; break
         case "Mux4Way16": hdl = builtins.Mux4Way16.hdl; break
+        case "Mux8Way16": hdl = builtins.Mux8Way16.hdl; break
         case "DMux": hdl = builtins.DMux.hdl; break
         case "DMux4Way": hdl = builtins.DMux4Way.hdl; break
+        case "DMux8Way": hdl = builtins.DMux8Way.hdl; break
         case "Or8Way": hdl = builtins.Or8Way.hdl; break
         // CH2
         case "HalfAdder": hdl = builtins.HalfAdder.hdl; break
         case "FullAdder": hdl = builtins.FullAdder.hdl; break
         case "Add16": hdl = builtins.Add16.hdl; break
         case "Inc16": hdl = builtins.Inc16.hdl; break
+        case "ALU": hdl = builtins.ALU.hdl; break
         // CH3
         case "DFF": hdl = builtins.DFF.hdl; break
         case "Bit": hdl = builtins.Bit.hdl; break
+        case "Register": hdl = builtins.Register.hdl; break
+        case "PC": hdl = builtins.PC.hdl; break
+        case "RAM8": hdl = builtins.RAM8.hdl; break
+        case "RAM64": hdl = builtins.RAM64.hdl; break
+        case "RAM512": hdl = builtins.RAM512.hdl; break
+        case "RAM4K": hdl = builtins.RAM4K.hdl; break
+        case "RAM16K": hdl = builtins.RAM16K.hdl; break
+        // CH5
+        case "Screen": hdl = builtins.Screen.hdl; break
+        case "Keyboard": hdl = builtins.Keyboard.hdl; break
+        case "ROM32K": hdl = builtins.ROM32K.hdl; break
         default: HDLParser.fail(`Invalid builtin gate class name: ${name}`)
     }
     return getGateClassHDL(hdl)
@@ -43,7 +57,7 @@ export function getGateClassBuiltIn(name: string): GateClass | never {
 
 export function readHDL(parser: HDLParser): GateClass | never {
   // read CHIP keyword
-  parser.expectCurrent(TokenType.CHIP, "Missing 'CHIP' keyword")
+  parser.expectCurrent(TokenType.CHIP, `Missing 'CHIP' keyword, found ${parser.token.type}`)
   // read gate name
   parser.expectPeek(TokenType.IDENTIFIER, "Missing chip name")
   const gateName = parser.token.literal ?? ""
