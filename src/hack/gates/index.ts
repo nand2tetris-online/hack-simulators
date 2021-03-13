@@ -2,16 +2,26 @@ import { HDLParser } from "../hdl/parser";
 import { HDLTokenizer, TokenType } from "../hdl/tokenizer";
 import { BuiltInGateClass } from "./builtin-gateclass";
 import { builtins } from "./builtins";
-import { CompositeGateClass } from "./composite-gateclass";
+import { CompositeGateClass, UserDefinedParts } from "./composite-gateclass";
 import { GateClass, PinInfo } from "./gateclass";
 
-export function getGateClassHDL(hdl: string): GateClass | never {
-    const tokenizer = new HDLTokenizer(hdl)
-    const parser = new HDLParser(tokenizer)
-    return readHDL(parser)
+export function getGateClass(name: string, userDefinedParts: UserDefinedParts): GateClass | never {
+  const hdlFileName = `${name}.hdl`
+  if (userDefinedParts.has(hdlFileName)) {
+    const hdl = userDefinedParts.get(hdlFileName) ?? ""
+    return getGateClassHDL(hdl, userDefinedParts)
+  } else {
+    return getGateClassBuiltIn(name, userDefinedParts)
+  }
 }
 
-export function getGateClassBuiltIn(name: string): GateClass | never {
+export function getGateClassHDL(hdl: string, userDefinedParts: UserDefinedParts): GateClass | never {
+    const tokenizer = new HDLTokenizer(hdl)
+    const parser = new HDLParser(tokenizer)
+    return readHDL(parser, userDefinedParts)
+}
+
+export function getGateClassBuiltIn(name: string, userDefinedParts: UserDefinedParts): GateClass | never {
     let hdl: string
     switch (name) {
         // CH1
@@ -53,10 +63,10 @@ export function getGateClassBuiltIn(name: string): GateClass | never {
         case "ROM32K": hdl = builtins.ROM32K.hdl; break
         default: HDLParser.fail(`Invalid builtin gate class name: ${name}`)
     }
-    return getGateClassHDL(hdl)
+    return getGateClassHDL(hdl, userDefinedParts)
 }
 
-export function readHDL(parser: HDLParser): GateClass | never {
+export function readHDL(parser: HDLParser, userDefinedParts: UserDefinedParts): GateClass | never {
   // read CHIP keyword
   parser.expectCurrent(TokenType.CHIP, `Missing 'CHIP' keyword`)
   // read gate name
@@ -76,7 +86,7 @@ export function readHDL(parser: HDLParser): GateClass | never {
   } else if (parser.tokenIs(TokenType.PARTS)) {
     // read :
     parser.expectPeek(TokenType.COLON, "Missing ':'")
-    return new CompositeGateClass(gateName, parser, inputPinsInfo, outputPinsInfo)
+    return new CompositeGateClass(gateName, parser, inputPinsInfo, outputPinsInfo, userDefinedParts)
   } else {
     return parser.fail("'PARTS' or 'BUILTIN' keyword expected")
   }

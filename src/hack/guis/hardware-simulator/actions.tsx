@@ -1,45 +1,52 @@
 import { AriaAttributes, ChangeEvent, DOMAttributes, useCallback } from "react"
+import { UserDefinedParts } from "../../gates/composite-gateclass"
 
 export type ActionsProps = {
-  setHDLFile: (_: File | null) => void
-  setUserDefinedParts: (_: Map<string, File> | null) => void
+  hdlFileName: string | null
+  setHDLFileName: (_: string | null) => void
+  userDefinedParts: UserDefinedParts | null
+  setUserDefinedParts: (_: UserDefinedParts | null) => void
   singleStep: () => void
 }
 
-export function Actions({ setHDLFile, setUserDefinedParts, singleStep }: ActionsProps) {
+export function Actions({ hdlFileName, setHDLFileName, userDefinedParts, setUserDefinedParts, singleStep }: ActionsProps) {
   // TODO: make a better approach
-  const setHDLFileFromDirectory = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+  const setWorkingDirectory = useCallback(async (e: ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files
     if (!files) {
-      console.log("No files found")
-      return
+      throw new Error("no files found")
     }
-    let hasSetHDLFile = false
-    let userDefinedParts = new Map<string, File>()
+    let userDefinedParts = new Map<string, string>()
     let firstHDLFile
     for (let i=0; i<files.length; i++) {
       const file = files[i]
       if (file.name.endsWith(".hdl")) {
-        if (!hasSetHDLFile) {
-          hasSetHDLFile = true
+        if (!firstHDLFile) {
           firstHDLFile = file
-        } else {
-          userDefinedParts.set(file.name, file)
         }
+        userDefinedParts.set(file.name, await file.text())
       }
     }
     setUserDefinedParts(userDefinedParts)
     if (firstHDLFile) {
-      setHDLFile(firstHDLFile)
+      setHDLFileName(firstHDLFile.name)
     }
-  }, [setHDLFile, setUserDefinedParts])
+  }, [setHDLFileName, setUserDefinedParts])
 
   return (
     <div>
-      <input id="gateFile" type="file" webkitdirectory="" directory="" mozdirectory="" accept=".hdl" onChange={setHDLFileFromDirectory} />
-      <label htmlFor="gateFile">Load Chip</label>
+      <input type="file" webkitdirectory="" directory="" mozdirectory="" onChange={setWorkingDirectory} />
+      <select onChange={(e) => setHDLFileName(e.target.value)}>
+      {Array.from(userDefinedParts?.keys() ?? []).map((filename) => {
+        if (filename === hdlFileName) {
+          return (<option selected key={filename} value={filename}>{filename}</option>)
+        } else {
+          return (<option key={filename} value={filename}>{filename}</option>)
+        }
+      })}
+      </select>
       <button onClick={singleStep}>Single Step</button>
-    </div>
+      </div>
   )
 }
 

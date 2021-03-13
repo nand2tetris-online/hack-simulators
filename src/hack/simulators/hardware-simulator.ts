@@ -1,4 +1,5 @@
-import { getGateClassHDL } from "../gates"
+import { getGateClass } from "../gates"
+import { UserDefinedParts } from "../gates/composite-gateclass"
 import { Gate } from "../gates/gate"
 
 export class HardwareSimulator {
@@ -10,8 +11,8 @@ export class HardwareSimulator {
         this.clockUp = false
     }
 
-    loadGate(hdl: string) {
-        this.gate = getGateClassHDL(hdl).newInstance()
+    loadGate(name: string, userDefinedParts: UserDefinedParts) {
+        this.gate = getGateClass(name, userDefinedParts).newInstance()
     }
 
     step() {
@@ -36,7 +37,7 @@ export class HardwareSimulator {
         this.clockUp = true
     }
 
-    setInput(pinNumber: number, value: number) {
+    setInputPin(pinNumber: number, value: number) {
         this.gate?.inputPins[pinNumber].set(value)
     }
 }

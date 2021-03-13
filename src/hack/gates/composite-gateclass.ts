@@ -5,19 +5,27 @@ import { Node, SubNode, SubBus, SubBusListeningAdapter } from "./node"
 import { HDLParser } from "./../hdl/parser"
 import { TokenType } from "./../hdl/tokenizer"
 import { CompositeGate } from "./composite-gate"
-import { getGateClassBuiltIn } from "."
+import { getGateClass } from "."
+
+export type Name = string
+export type Content = string
+export type UserDefinedParts = Map<string, string>
 
 export class CompositeGateClass extends GateClass {
   partsList: GateClass[]
   internalPinsInfo: PinInfo[]
   connections: Set<Connection>
 
-  constructor(name: string, parser: HDLParser, inputPinsInfo: PinInfo[], outputPinsInfo: PinInfo[]) {
+  constructor(name: string,
+              parser: HDLParser,
+              inputPinsInfo: PinInfo[],
+              outputPinsInfo: PinInfo[],
+              userDefinedParts: UserDefinedParts) {
     super(name, inputPinsInfo, outputPinsInfo)
     this.partsList = []
     this.internalPinsInfo = []
     this.connections = new Set()
-    this.readParts(parser)
+    this.readParts(parser, userDefinedParts)
   }
 
   newInstance(): Gate {
@@ -119,7 +127,7 @@ export class CompositeGateClass extends GateClass {
     }
   }
 
-  readParts(parser: HDLParser) {
+  readParts(parser: HDLParser, userDefinedParts: UserDefinedParts) {
     let endOfParts = false
     while (parser.hasMoreTokens() && !endOfParts) {
       // check if end of hdl
@@ -132,7 +140,7 @@ export class CompositeGateClass extends GateClass {
         parser.expectPeek(TokenType.IDENTIFIER, "A GateClass name is expected")
         const partName = parser.token.literal ?? ''
         // make part
-        const gateClass = getGateClassBuiltIn(partName)
+        const gateClass = getGateClass(partName, userDefinedParts)
         const partNumber = this.partsList.length
         this.partsList.push(gateClass)
         this.isClocked = this.isClocked || gateClass.isClocked
