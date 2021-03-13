@@ -2,3 +2,14 @@
   display: grid;
   grid-template-columns: repeat(2, 400px);
 }
+
+.hdlViewer {
+  overflow: scroll;
+  border: 2px solid;
+  padding: 10px;
+}
+
+.pins {
+  border: 2px solid;
+  padding: 10px;
+}

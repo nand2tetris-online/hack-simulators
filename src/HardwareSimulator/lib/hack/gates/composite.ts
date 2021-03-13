@@ -12,7 +12,6 @@ export class CompositeGate extends Gate {
     super(inputPins, outputPins, gateClass)
     this.internalPins = internalPins
     this.parts = parts
-    console.log(this.parts)
   }
 
   reCompute() {
@@ -20,18 +19,14 @@ export class CompositeGate extends Gate {
   }
 
   clockUp() {
-    console.log("CompositeGate.clockUp()", this.gateClass.isClocked)
     if (this.gateClass.isClocked) {
-      console.log("parts.length", this.parts.length)
       for (const part of this.parts) {
-        console.log("part.tock()", part)
         part.tock()
       }
     }
   }
 
   clockDown() {
-    console.log("CompositeGate clockDown")
     if (this.gateClass.isClocked)
       for (const part of this.parts) part.tick()
   }
@@ -119,7 +114,7 @@ export class CompositeGateClass extends GateClass {
           }
           break
         case ConnectionType.FROM_TRUE:
-          if (!gateSubBus) throw new Error("gateSubBus is null")
+          if (!gateSubBus) HDLParser.fail("gateSubBus is null")
           subNode = new SubNode(gateSubBus)
           subNode.set(1)
           if (!partSubBus) {
@@ -130,7 +125,7 @@ export class CompositeGateClass extends GateClass {
           }
           break
         case ConnectionType.FROM_FALSE:
-          if (!gateSubBus) throw new Error("gateSubBus is null")
+          if (!gateSubBus) HDLParser.fail("gateSubBus is null")
           subNode = new SubNode(gateSubBus)
           subNode.set(0)
           if (!partSubBus) {

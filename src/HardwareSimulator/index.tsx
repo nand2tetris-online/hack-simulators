@@ -10,10 +10,11 @@ export type ActionsProps = {
 export function Actions({ setHDLFile, singleStep }: ActionsProps) {
   return (
     <div>
-      <label>Load Chip
-        <input type="file" accept=".hdl" onChange={(e) => setHDLFile(e.target.files?.item(0) ?? null)} />
-      </label>
-      <button onClick={singleStep}>Single Step</button>
+      <form>
+        <input id="gateFile" type="file" accept=".hdl" onChange={(e) => setHDLFile(e.target.files?.item(0) ?? null)} />
+        <label htmlFor="gateFile">Load Chip</label>
+        <button onClick={singleStep}>Single Step</button>
+      </form>
     </div>
   )
 }
@@ -25,7 +26,7 @@ export function ChipName ({ name }: ChipNameProps) {
 
 export type HDLViewerProps = { hdl: string | null }
 export function HDLViewer ({ hdl }: HDLViewerProps) {
-  return (<pre>{hdl}</pre>)
+  return (<div className="hdlViewer"><pre>{hdl}</pre></div>)
 }
 
 export type StatusMessageProps = { status: string | null }
@@ -45,7 +46,7 @@ export function Pins ({ title, type, pinData, updatePin }: PinsProps) {
   }, [updatePin])
 
   return (
-    <div>
+    <div className="pins">
       <h3>{title}</h3>
       <table>
         <tbody>
@@ -171,8 +172,8 @@ export default function HardwareSimulator() {
       <div className="container">
         <Pins title="Input Pins" type={PinType.INPUT} pinData={pinData.input} updatePin={updatePin} />
         <Pins title="Output Pins" type={PinType.OUTPUT} pinData={pinData.output} updatePin={updatePin} />
-        <Pins title="Internal Pins" type={PinType.INTERNAL} pinData={pinData.internal} updatePin={updatePin} />
         <HDLViewer hdl={hdl} />
+        <Pins title="Internal Pins" type={PinType.INTERNAL} pinData={pinData.internal} updatePin={updatePin} />
       </div>
       <StatusMessage status={status} />
     </div>

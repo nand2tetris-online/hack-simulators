@@ -57,7 +57,7 @@ export function getGateClassBuiltIn(name: string): GateClass | never {
 
 export function readHDL(parser: HDLParser): GateClass | never {
   // read CHIP keyword
-  parser.expectCurrent(TokenType.CHIP, `Missing 'CHIP' keyword, found ${parser.token.type}`)
+  parser.expectCurrent(TokenType.CHIP, `Missing 'CHIP' keyword`)
   // read gate name
   parser.expectPeek(TokenType.IDENTIFIER, "Missing chip name")
   const gateName = parser.token.literal ?? ""
