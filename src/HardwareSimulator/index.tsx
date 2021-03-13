@@ -167,11 +167,13 @@ export default function HardwareSimulator() {
     <div>
       <h1>HardwareSimulator</h1>
       <Actions setHDLFile={setHDLFile} singleStep={singleStep} />
-      <Pins title="Input Pins" type={PinType.INPUT} pinData={pinData.input} updatePin={updatePin} />
-      <Pins title="Output Pins" type={PinType.OUTPUT} pinData={pinData.output} updatePin={updatePin} />
-      <Pins title="Internal Pins" type={PinType.INTERNAL} pinData={pinData.internal} updatePin={updatePin} />
       <ChipName name={hdlFileName} />
-      <HDLViewer hdl={hdl} />
+      <div className="container">
+        <Pins title="Input Pins" type={PinType.INPUT} pinData={pinData.input} updatePin={updatePin} />
+        <Pins title="Output Pins" type={PinType.OUTPUT} pinData={pinData.output} updatePin={updatePin} />
+        <Pins title="Internal Pins" type={PinType.INTERNAL} pinData={pinData.internal} updatePin={updatePin} />
+        <HDLViewer hdl={hdl} />
+      </div>
       <StatusMessage status={status} />
     </div>
   )
