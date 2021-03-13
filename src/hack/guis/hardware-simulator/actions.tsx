@@ -7,9 +7,10 @@ export type ActionsProps = {
   userDefinedParts: UserDefinedParts | null
   setUserDefinedParts: (_: UserDefinedParts | null) => void
   singleStep: () => void
+  setFormat: (_: string) => void
 }
 
-export function Actions({ hdlFileName, setHDLFileName, userDefinedParts, setUserDefinedParts, singleStep }: ActionsProps) {
+export function Actions({ hdlFileName, setHDLFileName, userDefinedParts, setUserDefinedParts, singleStep, setFormat }: ActionsProps) {
   // TODO: make a better approach
   const setWorkingDirectory = useCallback(async (e: ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files
@@ -44,6 +45,11 @@ export function Actions({ hdlFileName, setHDLFileName, userDefinedParts, setUser
           return (<option key={filename} value={filename}>{filename}</option>)
         }
       })}
+      </select>
+      <select onChange={(e) => setFormat(e.target.value)}>
+        <option key="decimal" value="decimal">Decimal</option>
+        <option key="binary" value="binary">Binary</option>
+        <option key="hexadecimal" value="hexadecimal">Hexadecimal</option>
       </select>
       <button onClick={singleStep}>Single Step</button>
       </div>

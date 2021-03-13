@@ -32,6 +32,8 @@ export default function HardwareSimulatorUI() {
   const [pinData, setPinData] = useState<AllPinData>({ input: [], output: [], internal: [] })
   const [status, setStatus] = useState<string | null>(null)
 
+  const [format, setFormat] = useState<string>("decimal")
+
   const simulator = useRef(new HardwareSimulator())
 
   // update UI
@@ -88,12 +90,13 @@ export default function HardwareSimulatorUI() {
         setHDLFileName={setGateFilename}
         userDefinedParts={userDefinedParts}
         setUserDefinedParts={setUserDefinedParts}
+        setFormat={setFormat}
         singleStep={singleStep} />
       <div className="container">
-        <Pins title="Input Pins" type={PinType.INPUT} pinData={pinData.input} updatePin={updateInputPin} />
-        <Pins title="Output Pins" type={PinType.OUTPUT} pinData={pinData.output} updatePin={updateInputPin} />
+        <Pins title="Input Pins" type={PinType.INPUT} pinData={pinData.input} updatePin={updateInputPin} format={format} />
+        <Pins title="Output Pins" type={PinType.OUTPUT} pinData={pinData.output} updatePin={updateInputPin} format={format} />
         <HDLViewer hdl={hdl} />
-        <Pins title="Internal Pins" type={PinType.INTERNAL} pinData={pinData.internal} updatePin={updateInputPin} />
+        <Pins title="Internal Pins" type={PinType.INTERNAL} pinData={pinData.internal} updatePin={updateInputPin} format={format} />
       </div>
       <StatusMessage status={status} />
     </div>

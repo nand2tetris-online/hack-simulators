@@ -2,6 +2,11 @@ body {
   font-family: monospace;
 }
 
+input {
+  font-family: monospace;
+  font-size: 12px;
+}
+
 .actions {
   padding: 10px;
 }
