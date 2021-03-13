@@ -1,7 +1,7 @@
-import { HDLTokenizer } from "../../HDLTokenizer"
-import { HDLParser } from "../../parser"
-import { readHDL } from "./hdl"
-import { Node, SubBusListeningAdapter, SubNode, toBinaryString } from "./nodes"
+import { readHDL } from "./gates"
+import { Node, SubBusListeningAdapter, SubNode, toBinaryString } from "./gates/node"
+import { HDLParser } from "./hdl/parser"
+import { HDLTokenizer } from "./hdl/tokenizer"
 
 describe("Node", () => {
     it("does it", () => {

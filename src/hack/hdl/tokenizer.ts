@@ -203,3 +203,4 @@ function isDigit (char: string): boolean {
   const n = char.charCodeAt(0)
   return (n >= 48 && n < 58)
 }
+

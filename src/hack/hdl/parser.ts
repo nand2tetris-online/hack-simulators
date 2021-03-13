@@ -1,4 +1,4 @@
-import { HDLTokenizer, Token, TokenType } from "./HDLTokenizer";
+import { HDLTokenizer, Token, TokenType } from "./tokenizer";
 
 export class HDLParser {
   private input: HDLTokenizer

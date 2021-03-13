@@ -1,11 +1,11 @@
 import React from 'react'
 import './App.css'
-import HardwareSimulator from './HardwareSimulator'
+import HardwareSimulatorUI from './hack/guis/hardware-simulator'
 
 export default function App() {
   return (
     <div className="App">
-      <HardwareSimulator />
+      <HardwareSimulatorUI />
     </div>
   )
 }

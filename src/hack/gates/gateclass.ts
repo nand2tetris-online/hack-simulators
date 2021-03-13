@@ -1,4 +1,4 @@
-import { Node, SubBus } from "./nodes"
+import { Gate } from "./gate"
 
 export enum PinType {
     INPUT = "INPUT",
@@ -10,54 +10,6 @@ export enum PinType {
 export type PinInfo = {
     name: string
     width: number
-}
-
-export abstract class Gate {
-    gateClass: GateClass
-    inputPins: Node[]
-    outputPins: Node[]
-
-    constructor(inputPins: Node[], outputPins: Node[], gateClass: GateClass) {
-        this.inputPins = inputPins
-        this.outputPins = outputPins
-        this.gateClass = gateClass
-    }
-
-    abstract reCompute(): void
-    abstract clockUp(): void
-    abstract clockDown(): void
-
-    getNode(name: string): Node | null {
-        const type = this.gateClass.getPinType(name)
-        const index = this.gateClass.getPinNumber(name)
-        switch (type) {
-            case PinType.INPUT:
-                return this.inputPins[index]
-            case PinType.OUTPUT:
-                return this.outputPins[index]
-        }
-        return null
-    }
-
-    tick() {
-        console.log("Gate tick()")
-        this.doEval()
-        this.clockUp()
-    }
-
-    tock() {
-        console.log("Gate tock()")
-        this.clockDown()
-        this.doEval()
-    }
-
-    eval() {
-        this.doEval()
-    }
-
-    doEval() {
-        this.reCompute()
-    }
 }
 
 export abstract class GateClass {
@@ -124,23 +76,4 @@ export abstract class GateClass {
         this.namesToTypes[pinInfo.name] = type
         this.namesToNumbers[pinInfo.name] = pinNumber
     }
-}
-
-export enum ConnectionType {
-    FROM_INPUT = "FROM_INPUT",
-    TO_OUTPUT = "TO_OUTPUT",
-    FROM_INTERNAL = "FROM_INTERNAL",
-    TO_INTERNAL = "TO_INTERNAL",
-    FROM_TRUE = "FROM_TRUE",
-    FROM_FALSE = "FROM_FALSE",
-    INVALID = "INVALID"
-}
-
-export type Connection = {
-    type: ConnectionType
-    gatePinNumber: number
-    partNumber: number
-    partPinName: string
-    gateSubBus: SubBus | null
-    partSubBus: SubBus | null
 }

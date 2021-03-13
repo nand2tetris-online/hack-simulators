@@ -1,8 +1,9 @@
-import { HDLTokenizer, TokenType } from "../../HDLTokenizer"
-import { HDLParser } from "../../parser"
-import { builtins, BuiltInGateClass } from "./builtins"
-import { CompositeGateClass } from "./composite"
-import { GateClass, PinInfo } from "."
+import { HDLParser } from "../hdl/parser";
+import { HDLTokenizer, TokenType } from "../hdl/tokenizer";
+import { BuiltInGateClass } from "./builtin-gateclass";
+import { builtins } from "./builtins";
+import { CompositeGateClass } from "./composite-gateclass";
+import { GateClass, PinInfo } from "./gateclass";
 
 export function getGateClassHDL(hdl: string): GateClass | never {
     const tokenizer = new HDLTokenizer(hdl)
@@ -116,4 +117,5 @@ export function readPinsInfo(parser: HDLParser): PinInfo[] {
 
   return pinInfos
 }
+
 

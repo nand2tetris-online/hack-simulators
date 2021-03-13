@@ -1,47 +1,11 @@
-import { Gate, Connection, ConnectionType, GateClass, PinInfo, PinType } from "."
-import { TokenType } from "../../HDLTokenizer"
-import { HDLParser } from "../../parser"
-import { getGateClassBuiltIn } from "./hdl"
-import { Node, SubBus, SubBusListeningAdapter, SubNode } from "./nodes"
-
-export class CompositeGate extends Gate {
-  parts: Gate[]
-  internalPins: Node[]
-
-  constructor(inputPins: Node[], outputPins: Node[], internalPins: Node[], gateClass: GateClass, parts: Gate[]) {
-    super(inputPins, outputPins, gateClass)
-    this.internalPins = internalPins
-    this.parts = parts
-  }
-
-  reCompute() {
-    for (let part of this.parts) part.eval()
-  }
-
-  clockUp() {
-    if (this.gateClass.isClocked) {
-      for (const part of this.parts) {
-        part.tock()
-      }
-    }
-  }
-
-  clockDown() {
-    if (this.gateClass.isClocked)
-      for (const part of this.parts) part.tick()
-  }
-
-  getNode(name: string): Node | null {
-    const result = super.getNode(name)
-    if (!result) {
-      const type = this.gateClass.getPinType(name)
-      const index = this.gateClass.getPinNumber(name)
-      if (type === PinType.INTERNAL) return this.internalPins[index]
-    }
-    return result
-  }
-}
-
+import { Connection, ConnectionType } from "./connection"
+import { Gate } from "./gate"
+import { GateClass, PinInfo, PinType } from "./gateclass"
+import { Node, SubNode, SubBus, SubBusListeningAdapter } from "./node"
+import { HDLParser } from "./../hdl/parser"
+import { TokenType } from "./../hdl/tokenizer"
+import { CompositeGate } from "./composite-gate"
+import { getGateClassBuiltIn } from "."
 
 export class CompositeGateClass extends GateClass {
   partsList: GateClass[]
