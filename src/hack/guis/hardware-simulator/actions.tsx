@@ -34,7 +34,7 @@ export function Actions({ hdlFileName, setHDLFileName, userDefinedParts, setUser
   }, [setHDLFileName, setUserDefinedParts])
 
   return (
-    <div>
+    <div className="actions">
       <input type="file" webkitdirectory="" directory="" mozdirectory="" onChange={setWorkingDirectory} />
       <select onChange={(e) => setHDLFileName(e.target.value)}>
       {Array.from(userDefinedParts?.keys() ?? []).map((filename) => {

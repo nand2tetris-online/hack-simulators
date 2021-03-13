@@ -3,5 +3,5 @@ export type StatusMessageProps = {
 }
 
 export function StatusMessage({ status }: StatusMessageProps) {
-  return (<div>{status}</div>)
+  return (<div className="statusMessage">{status}</div>)
 }
