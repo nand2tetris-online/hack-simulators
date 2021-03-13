@@ -47,6 +47,7 @@ export function getPinData(gate: Gate, pinType: PinType): PinData[] {
 
 export default function HardwareSimulatorUI() {
   const [hdlFile, setHDLFile] = useState<File | null>(null)
+  const [_, setUserDefinedParts] = useState<Map<string, File> | null>(null)
   const [hdl, setHDL] = useState<string | null>(null)
   const [pinData, setPinData] = useState<AllPinData>({ input: [], output: [], internal: [] })
   const [status, setStatus] = useState<string | null>(null)
@@ -104,7 +105,7 @@ export default function HardwareSimulatorUI() {
   return (
     <div>
       <h1>HardwareSimulator</h1>
-      <Actions setHDLFile={setHDLFile} singleStep={singleStep} />
+      <Actions setHDLFile={setHDLFile} setUserDefinedParts={setUserDefinedParts} singleStep={singleStep} />
       <ChipName name={hdlFileName} />
       <div className="container">
         <Pins title="Input Pins" type={PinType.INPUT} pinData={pinData.input} updatePin={updateInputPin} />
