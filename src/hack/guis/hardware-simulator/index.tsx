@@ -9,7 +9,6 @@ import { StatusMessage } from "./status-message"
 import { ChipName } from "./chip-name"
 import { HardwareSimulator } from "../../simulators/hardware-simulator"
 import { Gate } from "../../gates/gate"
-import { Node } from "../../gates/node"
 
 export type PinUpdate = {
   value: string
