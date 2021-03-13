@@ -1,15 +1,15 @@
 import React, { useCallback, useEffect, useRef, useState } from "react"
-import { getGateClassHDL } from "./../../gates"
 import { CompositeGate } from "./../../gates/composite-gate"
 import { CompositeGateClass } from "./../../gates/composite-gateclass"
-import { Gate } from "./../../gates/gate"
-import { PinType } from "./../../gates/gateclass"
+import { PinInfo, PinType } from "./../../gates/gateclass"
 import { Actions } from "./actions"
 import { HDLViewer } from "./hdl-viewer"
 import { Pins } from "./pins"
 import { StatusMessage } from "./status-message"
 import { ChipName } from "./chip-name"
 import { HardwareSimulator } from "../../simulators/hardware-simulator"
+import { Gate } from "../../gates/gate"
+import { Node } from "../../gates/node"
 
 export type PinUpdate = {
   value: string
@@ -28,13 +28,31 @@ export type AllPinData = {
   internal: PinData[]
 }
 
+export function getPinData(gate: Gate, pinType: PinType): PinData[] {
+  let pinInfo: PinInfo[] = []
+  switch (pinType) {
+    case PinType.INPUT:
+      pinInfo = gate.gateClass.inputPinsInfo ?? []
+      return gate.inputPins.map((node, i) => ({name: pinInfo[i].name, value: node.value[0].toString()}))
+    case PinType.OUTPUT:
+      pinInfo = gate.gateClass.outputPinsInfo ?? []
+      return gate.outputPins.map((node, i) => ({name: pinInfo[i].name, value: node.value[0].toString()}))
+    case PinType.INTERNAL:
+      const compositeGate = gate as CompositeGate
+      const compositeClass = compositeGate.gateClass as CompositeGateClass
+      pinInfo = compositeClass.internalPinsInfo ?? []
+      return compositeGate.internalPins.map((node, i) => ({name: pinInfo[i].name, value: node.value[0].toString()}))
+  }
+  throw new Error(`pinType is ${pinType}`)
+}
+
 export default function HardwareSimulatorUI() {
   const [hdlFile, setHDLFile] = useState<File | null>(null)
   const [hdl, setHDL] = useState<string | null>(null)
   const [pinData, setPinData] = useState<AllPinData>({ input: [], output: [], internal: [] })
   const [status, setStatus] = useState<string | null>(null)
 
-  const simulator = useRef<HardwareSimulator>(new HardwareSimulator())
+  const simulator = useRef(new HardwareSimulator())
 
   // load and set hdl file contents
   useEffect(() => {
@@ -44,32 +62,14 @@ export default function HardwareSimulatorUI() {
     })()
   }, [hdlFile])
 
+  // update UI
   const updatePinData = useCallback(() => {
-    const inputInfo = simulator.current.gate?.gateClass.inputPinsInfo ?? []
-    const input = simulator.current.gate?.inputPins.map((node, i) => {
-      return ({
-        name: inputInfo[i].name,
-        value: node.value[0].toString(),
-      })
-    }) ?? []
-
-    const outputInfo = simulator.current.gate?.gateClass.outputPinsInfo ?? []
-    const output = simulator.current.gate?.outputPins.map((node, i) => {
-      return ({
-        name: outputInfo[i].name,
-        value: node.value[0].toString(2).padStart(outputInfo[i].width, "0"),
-      })
-    }) ?? []
-
-    const compositeGate = simulator.current.gate as CompositeGate
-    const compositeClass = compositeGate.gateClass as CompositeGateClass
-
-    const internalInfo = compositeClass.internalPinsInfo ?? []
-    const internal = compositeGate.internalPins.map((node, i) => ({
-      name: internalInfo[i].name,
-      value: node.value[0].toString(2).padStart(internalInfo[i].width, "0"),
-    })) ?? []
-
+    if (!simulator.current.gate) {
+      throw new Error("updatePinData: gate can not be null")
+    }
+    const input = getPinData(simulator.current.gate, PinType.INPUT)
+    const output = getPinData(simulator.current.gate, PinType.OUTPUT)
+    const internal = getPinData(simulator.current.gate, PinType.INTERNAL)
     setPinData({ input, output, internal })
   }, [])
 
