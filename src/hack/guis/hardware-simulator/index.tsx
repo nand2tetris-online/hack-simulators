@@ -6,7 +6,6 @@ import { Actions } from "./actions"
 import { HDLViewer } from "./hdl-viewer"
 import { Pins } from "./pins"
 import { StatusMessage } from "./status-message"
-import { ChipName } from "./chip-name"
 import { HardwareSimulator } from "../../simulators/hardware-simulator"
 import { Gate } from "../../gates/gate"
 
@@ -90,7 +89,6 @@ export default function HardwareSimulatorUI() {
         userDefinedParts={userDefinedParts}
         setUserDefinedParts={setUserDefinedParts}
         singleStep={singleStep} />
-      <ChipName name={gateFilename} />
       <div className="container">
         <Pins title="Input Pins" type={PinType.INPUT} pinData={pinData.input} updatePin={updateInputPin} />
         <Pins title="Output Pins" type={PinType.OUTPUT} pinData={pinData.output} updatePin={updateInputPin} />
