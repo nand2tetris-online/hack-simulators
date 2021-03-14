@@ -105,11 +105,13 @@ export default function HardwareSimulatorUI() {
         setTestScripts={setTestScripts}
         setFormat={setFormat}
         singleStep={singleStep} />
-      <Pins title="Input Pins" type={PinType.INPUT} pinData={pinData.input} updatePin={updateInputPin} format={format} />
-      <Pins title="Output Pins" type={PinType.OUTPUT} pinData={pinData.output} updatePin={updateInputPin} format={format} />
-      <TestScript script={displayScript} />
-      <HDLViewer hdl={hdl} />
-      <Pins title="Internal Pins" type={PinType.INTERNAL} pinData={pinData.internal} updatePin={updateInputPin} format={format} />
+      <div className="container">
+        <Pins title="Input Pins" type={PinType.INPUT} pinData={pinData.input} updatePin={updateInputPin} format={format} />
+        <Pins title="Output Pins" type={PinType.OUTPUT} pinData={pinData.output} updatePin={updateInputPin} format={format} />
+        <TestScript script={displayScript} />
+        <HDLViewer hdl={hdl} />
+        <Pins title="Internal Pins" type={PinType.INTERNAL} pinData={pinData.internal} updatePin={updateInputPin} format={format} />
+      </div>
       <StatusMessage status={status} />
     </div>
   )
