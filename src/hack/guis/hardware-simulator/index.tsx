@@ -8,6 +8,7 @@ import { Pins } from "./pins"
 import { StatusMessage } from "./status-message"
 import { HardwareSimulator } from "../../simulators/hardware-simulator"
 import { Gate } from "../../gates/gate"
+import { TestScript } from "./test-script"
 
 export type PinUpdate = {
   value: string
@@ -29,6 +30,9 @@ export type AllPinData = {
 export default function HardwareSimulatorUI() {
   const [gateFilename, setGateFilename] = useState<string | null>(null)
   const [userDefinedParts, setUserDefinedParts] = useState<UserDefinedParts | null>(null)
+  const [testScripts, setTestScripts] = useState<Map<string, string> | null>(null)
+  const [testScript, setTestScript] = useState<string | null>("default")
+
   const [pinData, setPinData] = useState<AllPinData>({ input: [], output: [], internal: [] })
   const [status, setStatus] = useState<string | null>(null)
 
@@ -82,22 +86,30 @@ export default function HardwareSimulatorUI() {
     hdl = userDefinedParts.get(gateFilename) ?? ""
   }
 
+  testScripts?.set("default", "repeat {\n    tick,\n    tock;\n}")
+  const displayScript = (testScript ? testScripts?.get(testScript) : null) ?? "No test found"
+
   return (
-    <div>
-      <h1>HardwareSimulator</h1>
+    <div id="hardwareSimulator">
+      <div className="header">
+        <h1>HardwareSimulator</h1>
+      </div>
       <Actions
         hdlFileName={gateFilename}
         setHDLFileName={setGateFilename}
         userDefinedParts={userDefinedParts}
         setUserDefinedParts={setUserDefinedParts}
+        testScript={testScript}
+        setTestScript={setTestScript}
+        testScripts={testScripts}
+        setTestScripts={setTestScripts}
         setFormat={setFormat}
         singleStep={singleStep} />
-      <div className="container">
-        <Pins title="Input Pins" type={PinType.INPUT} pinData={pinData.input} updatePin={updateInputPin} format={format} />
-        <Pins title="Output Pins" type={PinType.OUTPUT} pinData={pinData.output} updatePin={updateInputPin} format={format} />
-        <HDLViewer hdl={hdl} />
-        <Pins title="Internal Pins" type={PinType.INTERNAL} pinData={pinData.internal} updatePin={updateInputPin} format={format} />
-      </div>
+      <Pins title="Input Pins" type={PinType.INPUT} pinData={pinData.input} updatePin={updateInputPin} format={format} />
+      <Pins title="Output Pins" type={PinType.OUTPUT} pinData={pinData.output} updatePin={updateInputPin} format={format} />
+      <TestScript script={displayScript} />
+      <HDLViewer hdl={hdl} />
+      <Pins title="Internal Pins" type={PinType.INTERNAL} pinData={pinData.internal} updatePin={updateInputPin} format={format} />
       <StatusMessage status={status} />
     </div>
   )

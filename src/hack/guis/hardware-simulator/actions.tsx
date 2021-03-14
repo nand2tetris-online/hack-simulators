@@ -6,11 +6,15 @@ export type ActionsProps = {
   setHDLFileName: (_: string | null) => void
   userDefinedParts: UserDefinedParts | null
   setUserDefinedParts: (_: UserDefinedParts | null) => void
+  testScript: string | null
+  setTestScript: (_: string | null) => void
+  testScripts: Map<string, string> | null
+  setTestScripts: (_: Map<string, string> | null) => void
   singleStep: () => void
   setFormat: (_: string) => void
 }
 
-export function Actions({ hdlFileName, setHDLFileName, userDefinedParts, setUserDefinedParts, singleStep, setFormat }: ActionsProps) {
+export function Actions({ hdlFileName, setHDLFileName, userDefinedParts, setUserDefinedParts, testScript, setTestScript, testScripts, setTestScripts, singleStep, setFormat }: ActionsProps) {
   // TODO: make a better approach
   const setWorkingDirectory = useCallback(async (e: ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files
@@ -18,6 +22,7 @@ export function Actions({ hdlFileName, setHDLFileName, userDefinedParts, setUser
       throw new Error("no files found")
     }
     let userDefinedParts = new Map<string, string>()
+    let testScripts = new Map<string, string>()
     let firstHDLFile
     for (let i=0; i<files.length; i++) {
       const file = files[i]
@@ -26,13 +31,18 @@ export function Actions({ hdlFileName, setHDLFileName, userDefinedParts, setUser
           firstHDLFile = file
         }
         userDefinedParts.set(file.name, await file.text())
+      } else if (file.name.endsWith(".tst")) {
+        testScripts.set(file.name, await file.text())
       }
     }
+    setTestScripts(testScripts)
     setUserDefinedParts(userDefinedParts)
     if (firstHDLFile) {
       setHDLFileName(firstHDLFile.name)
     }
-  }, [setHDLFileName, setUserDefinedParts])
+  }, [setHDLFileName, setUserDefinedParts, setTestScripts])
+
+  const scripts = Array.from(testScripts?.keys() ?? [])
 
   return (
     <div className="actions">
@@ -45,6 +55,17 @@ export function Actions({ hdlFileName, setHDLFileName, userDefinedParts, setUser
           return (<option key={filename} value={filename}>{filename}</option>)
         }
       })}
+      </select>
+      <select onChange={(e) => setTestScript(e.target.value)}>
+      {
+        scripts.map((filename) => {
+          if (filename === testScript) {
+            return (<option selected key={filename} value={filename}>{filename}</option>)
+          } else {
+            return (<option key={filename} value={filename}>{filename}</option>)
+          }
+        })
+      }
       </select>
       <select onChange={(e) => setFormat(e.target.value)}>
         <option key="decimal" value="decimal">Decimal</option>
