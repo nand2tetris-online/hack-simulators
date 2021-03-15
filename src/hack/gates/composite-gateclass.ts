@@ -9,7 +9,7 @@ import { getGateClass } from "."
 
 export type Name = string
 export type Content = string
-export type UserDefinedParts = Map<string, string>
+export type UserWorkspace = Map<string, string>
 
 export class CompositeGateClass extends GateClass {
   partsList: GateClass[]
@@ -20,7 +20,7 @@ export class CompositeGateClass extends GateClass {
               parser: HDLParser,
               inputPinsInfo: PinInfo[],
               outputPinsInfo: PinInfo[],
-              userDefinedParts: UserDefinedParts) {
+              userDefinedParts: UserWorkspace) {
     super(name, inputPinsInfo, outputPinsInfo)
     this.partsList = []
     this.internalPinsInfo = []
@@ -127,7 +127,7 @@ export class CompositeGateClass extends GateClass {
     }
   }
 
-  readParts(parser: HDLParser, userDefinedParts: UserDefinedParts) {
+  readParts(parser: HDLParser, userDefinedParts: UserWorkspace) {
     let endOfParts = false
     while (parser.hasMoreTokens() && !endOfParts) {
       // check if end of hdl

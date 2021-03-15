@@ -1,5 +1,5 @@
 import { getGateClass } from "../gates"
-import { UserDefinedParts } from "../gates/composite-gateclass"
+import { UserWorkspace } from "../gates/composite-gateclass"
 import { Gate } from "../gates/gate"
 
 export class HardwareSimulator {
@@ -11,7 +11,7 @@ export class HardwareSimulator {
         this.clockUp = false
     }
 
-    loadGate(name: string, userDefinedParts: UserDefinedParts) {
+    loadGate(name: string, userDefinedParts: UserWorkspace) {
         this.gate = getGateClass(name, userDefinedParts).newInstance()
     }
 

@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from "react"
 import { CompositeGate } from "./../../gates/composite-gate"
-import { CompositeGateClass, UserDefinedParts } from "./../../gates/composite-gateclass"
+import { CompositeGateClass, UserWorkspace } from "./../../gates/composite-gateclass"
 import { PinInfo, PinType } from "./../../gates/gateclass"
 import { Actions } from "./actions"
 import { HDLViewer } from "./hdl-viewer"
@@ -28,9 +28,8 @@ export type AllPinData = {
 }
 
 export default function HardwareSimulatorUI() {
+  const [userWorkspace, setUserWorkspace] = useState<UserWorkspace | null>(null)
   const [gateFilename, setGateFilename] = useState<string | null>(null)
-  const [userDefinedParts, setUserDefinedParts] = useState<UserDefinedParts | null>(null)
-  const [testScripts, setTestScripts] = useState<Map<string, string> | null>(null)
   const [testScript, setTestScript] = useState<string | null>("default")
 
   const [pinData, setPinData] = useState<AllPinData>({ input: [], output: [], internal: [] })
@@ -54,18 +53,18 @@ export default function HardwareSimulatorUI() {
 
   // parse hdl file contents into gate
   useEffect(() => {
-    if (!gateFilename || !userDefinedParts) { return }
+    if (!gateFilename || !userWorkspace) { return }
     if (!gateFilename.endsWith(".hdl")) { return }
     const gateName = gateFilename.slice(0, -4)
     try {
-      simulator.current.loadGate(gateName, userDefinedParts)
+      simulator.current.loadGate(gateName, userWorkspace)
       updatePinData()
       setStatus("Loaded successfully!")
       console.log(simulator.current.gate)
     } catch (error) {
       setStatus(`${error}`)
     }
-  }, [gateFilename, userDefinedParts, updatePinData])
+  }, [gateFilename, userWorkspace, updatePinData])
 
   // step forward one time unit
   const singleStep = useCallback(() => {
@@ -82,12 +81,12 @@ export default function HardwareSimulatorUI() {
   }, [updatePinData])
 
   let hdl = "No hdl file"
-  if (userDefinedParts && gateFilename) {
-    hdl = userDefinedParts.get(gateFilename) ?? ""
+  if (userWorkspace && gateFilename) {
+    hdl = userWorkspace.get(gateFilename) ?? ""
   }
 
-  testScripts?.set("default", "repeat {\n    tick,\n    tock;\n}")
-  const displayScript = (testScript ? testScripts?.get(testScript) : null) ?? "No test found"
+  userWorkspace?.set("default", "repeat {\n    tick,\n    tock;\n}")
+  const displayScript = (testScript ? userWorkspace?.get(testScript) : null) ?? "No test found"
 
   return (
     <div id="hardwareSimulator">
@@ -95,14 +94,12 @@ export default function HardwareSimulatorUI() {
         <h1>HardwareSimulator</h1>
       </div>
       <Actions
-        hdlFileName={gateFilename}
+        hdlFilename={gateFilename}
         setHDLFileName={setGateFilename}
-        userDefinedParts={userDefinedParts}
-        setUserDefinedParts={setUserDefinedParts}
+        userWorkspace={userWorkspace}
+        setUserWorkspace={setUserWorkspace}
         testScript={testScript}
         setTestScript={setTestScript}
-        testScripts={testScripts}
-        setTestScripts={setTestScripts}
         setFormat={setFormat}
         singleStep={singleStep} />
       <div className="container">

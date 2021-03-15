@@ -2,10 +2,10 @@ import { HDLParser } from "../hdl/parser";
 import { HDLTokenizer, TokenType } from "../hdl/tokenizer";
 import { BuiltInGateClass } from "./builtin-gateclass";
 import { builtins } from "./builtins";
-import { CompositeGateClass, UserDefinedParts } from "./composite-gateclass";
+import { CompositeGateClass, UserWorkspace } from "./composite-gateclass";
 import { GateClass, PinInfo } from "./gateclass";
 
-export function getGateClass(name: string, userDefinedParts: UserDefinedParts): GateClass | never {
+export function getGateClass(name: string, userDefinedParts: UserWorkspace): GateClass | never {
   const hdlFileName = `${name}.hdl`
   if (userDefinedParts.has(hdlFileName)) {
     const hdl = userDefinedParts.get(hdlFileName) ?? ""
@@ -15,13 +15,13 @@ export function getGateClass(name: string, userDefinedParts: UserDefinedParts): 
   }
 }
 
-export function getGateClassHDL(hdl: string, userDefinedParts: UserDefinedParts): GateClass | never {
+export function getGateClassHDL(hdl: string, userDefinedParts: UserWorkspace): GateClass | never {
     const tokenizer = new HDLTokenizer(hdl)
     const parser = new HDLParser(tokenizer)
     return readHDL(parser, userDefinedParts)
 }
 
-export function getGateClassBuiltIn(name: string, userDefinedParts: UserDefinedParts): GateClass | never {
+export function getGateClassBuiltIn(name: string, userDefinedParts: UserWorkspace): GateClass | never {
     let hdl: string
     switch (name) {
         // CH1
@@ -66,7 +66,7 @@ export function getGateClassBuiltIn(name: string, userDefinedParts: UserDefinedP
     return getGateClassHDL(hdl, userDefinedParts)
 }
 
-export function readHDL(parser: HDLParser, userDefinedParts: UserDefinedParts): GateClass | never {
+export function readHDL(parser: HDLParser, userDefinedParts: UserWorkspace): GateClass | never {
   // read CHIP keyword
   parser.expectCurrent(TokenType.CHIP, `Missing 'CHIP' keyword`)
   // read gate name
