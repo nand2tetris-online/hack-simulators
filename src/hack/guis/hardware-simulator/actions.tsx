@@ -35,19 +35,18 @@ export function Actions({ hdlFilename, setHDLFileName, userWorkspace, setUserWor
   }, [setHDLFileName, setUserWorkspace])
 
   const scripts = Array.from(userWorkspace?.keys() ?? [])
+    .filter((file) => file.endsWith(".tst"))
+  const hdls = Array.from(userWorkspace?.keys() ?? [])
+    .filter((file) => file.endsWith(".hdl"))
 
   return (
     <div className="actions">
       <input type="file" webkitdirectory="" directory="" mozdirectory="" onChange={setWorkingDirectory} />
       <select value={hdlFilename ?? undefined} onChange={(e) => setHDLFileName(e.target.value)}>
-        {Array.from(userWorkspace?.keys() ?? []).map((filename) =>
-          (<option key={filename} value={filename}>{filename}</option>)
-        )}
+        {hdls.map((filename) => (<option key={filename} value={filename}>{filename}</option>))}
       </select>
       <select value={testScript ?? undefined} onChange={(e) => setTestScript(e.target.value)}>
-        {scripts.map((filename) =>
-          (<option key={filename} value={filename}>{filename}</option>)
-        )}
+        {scripts.map((filename) => (<option key={filename} value={filename}>{filename}</option>))}
       </select>
       <select onChange={(e) => setFormat(e.target.value)}>
         <option key="decimal" value="decimal">Decimal</option>

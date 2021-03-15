@@ -30,7 +30,7 @@ export type AllPinData = {
 export default function HardwareSimulatorUI() {
   const [userWorkspace, setUserWorkspace] = useState<UserWorkspace | null>(null)
   const [gateFilename, setGateFilename] = useState<string | null>(null)
-  const [testScript, setTestScript] = useState<string | null>("default")
+  const [testScript, setTestScript] = useState<string | null>("default.tst")
 
   const [pinData, setPinData] = useState<AllPinData>({ input: [], output: [], internal: [] })
   const [status, setStatus] = useState<string | null>(null)
@@ -85,7 +85,7 @@ export default function HardwareSimulatorUI() {
     hdl = userWorkspace.get(gateFilename) ?? ""
   }
 
-  userWorkspace?.set("default", "repeat {\n    tick,\n    tock;\n}")
+  userWorkspace?.set("default.tst", "repeat {\n    tick,\n    tock;\n}")
   const displayScript = (testScript ? userWorkspace?.get(testScript) : null) ?? "No test found"
 
   return (
@@ -114,7 +114,7 @@ export default function HardwareSimulatorUI() {
   )
 }
 
-export function getPinData(gate: Gate, pinType: PinType): PinData[] {
+export function getPinData(gate: Gate, pinType: PinType): PinData[] | never {
   let pinInfo: PinInfo[] = []
   switch (pinType) {
     case PinType.INPUT:
@@ -130,6 +130,7 @@ export function getPinData(gate: Gate, pinType: PinType): PinData[] {
       if (!compositeClass) return []
       pinInfo = compositeClass.internalPinsInfo
       return compositeGate.internalPins.map((node, i) => ({name: pinInfo[i].name, value: node.value[0].toString()}))
+    default:
+      throw new Error(`pinType is ${pinType}`)
   }
-  throw new Error(`pinType is ${pinType}`)
 }
