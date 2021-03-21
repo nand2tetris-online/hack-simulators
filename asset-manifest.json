@@ -1,22 +1,22 @@
 {
   "files": {
     "main.css": "/hack-simulators/static/css/main.781770e5.chunk.css",
-    "main.js": "/hack-simulators/static/js/main.a4510184.chunk.js",
-    "main.js.map": "/hack-simulators/static/js/main.a4510184.chunk.js.map",
+    "main.js": "/hack-simulators/static/js/main.f1bf166c.chunk.js",
+    "main.js.map": "/hack-simulators/static/js/main.f1bf166c.chunk.js.map",
     "runtime-main.js": "/hack-simulators/static/js/runtime-main.8dcf58c2.js",
     "runtime-main.js.map": "/hack-simulators/static/js/runtime-main.8dcf58c2.js.map",
-    "static/js/2.ab6e0cdf.chunk.js": "/hack-simulators/static/js/2.ab6e0cdf.chunk.js",
-    "static/js/2.ab6e0cdf.chunk.js.map": "/hack-simulators/static/js/2.ab6e0cdf.chunk.js.map",
+    "static/js/2.e26c35b8.chunk.js": "/hack-simulators/static/js/2.e26c35b8.chunk.js",
+    "static/js/2.e26c35b8.chunk.js.map": "/hack-simulators/static/js/2.e26c35b8.chunk.js.map",
     "static/js/3.e8cd7f2b.chunk.js": "/hack-simulators/static/js/3.e8cd7f2b.chunk.js",
     "static/js/3.e8cd7f2b.chunk.js.map": "/hack-simulators/static/js/3.e8cd7f2b.chunk.js.map",
     "index.html": "/hack-simulators/index.html",
     "static/css/main.781770e5.chunk.css.map": "/hack-simulators/static/css/main.781770e5.chunk.css.map",
-    "static/js/2.ab6e0cdf.chunk.js.LICENSE.txt": "/hack-simulators/static/js/2.ab6e0cdf.chunk.js.LICENSE.txt"
+    "static/js/2.e26c35b8.chunk.js.LICENSE.txt": "/hack-simulators/static/js/2.e26c35b8.chunk.js.LICENSE.txt"
   },
   "entrypoints": [
     "static/js/runtime-main.8dcf58c2.js",
-    "static/js/2.ab6e0cdf.chunk.js",
+    "static/js/2.e26c35b8.chunk.js",
     "static/css/main.781770e5.chunk.css",
-    "static/js/main.a4510184.chunk.js"
+    "static/js/main.f1bf166c.chunk.js"
   ]
 }
