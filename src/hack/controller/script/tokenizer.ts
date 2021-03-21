@@ -4,6 +4,11 @@ export enum TokenType {
   SEMICOLON = 'SEMICOLON',
   EOF = 'EOF',
 
+  REPEAT = 'REPEAT',
+
+  LBRACE = '{',
+  RBRACE = '}',
+
   INVALID = 'INVALID',
 }
 
@@ -29,7 +34,9 @@ export class ScriptTokenizer {
     this.readpos = 0
     this.pos = 0
     this.cur = ''
-    this.keywords = {};
+    this.keywords = {
+      'repeat': TokenType.REPEAT,
+    };
 
     this.readChar()
   }
@@ -43,6 +50,12 @@ export class ScriptTokenizer {
 
     this.token.literal = this.cur
     switch (this.cur) {
+      case '{':
+        this.token.type = TokenType.LBRACE
+        break
+      case '}':
+        this.token.type = TokenType.RBRACE
+        break
       case ';':
         this.token.type = TokenType.SEMICOLON
         break

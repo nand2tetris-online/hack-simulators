@@ -8,12 +8,14 @@ export class HackController {
 
     script: Script | null;
     currentCommandIndex: number;
+    loopCommandIndex: number;
 
     constructor(simulator: HardwareSimulator) {
         this.simulator = simulator;
         this.script = null;
 
         this.currentCommandIndex = 0;
+        this.loopCommandIndex = 0;
     }
 
     getGate(): Gate | null {
@@ -38,18 +40,33 @@ export class HackController {
     }
 
     miniStep() {
-        const command = this.script?.getCommandAt(this.currentCommandIndex);
-        if (!command) {
-            console.log("No command found.");
-            return;
-        }
+        let redo = false;
 
-        switch (command.code) {
-            case CommandCode.SIMULATOR:
-                this.simulator.doCommand(command.getArg());
+        do {
+            const command = this.script?.getCommandAt(this.currentCommandIndex);
+            if (!command) {
+                console.log("No command found.");
+                return;
+            }
+            redo = false;
+
+            switch (command.code) {
+                case CommandCode.SIMULATOR:
+                    this.simulator.doCommand(command.getArg());
                 break;
-        }
+                case CommandCode.REPEAT:
+                    this.loopCommandIndex = this.currentCommandIndex + 1;
+                redo = true;
+                break;
+            }
 
-        this.currentCommandIndex++;
+            if (command.code !== CommandCode.END) {
+                this.currentCommandIndex++;
+                const nextCommand = this.script?.getCommandAt(this.currentCommandIndex);
+                if (nextCommand?.code === CommandCode.REPEAT_END) {
+                    this.currentCommandIndex = this.loopCommandIndex;
+                }
+            }
+        } while (redo);
     }
 }

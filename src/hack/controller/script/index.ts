@@ -1,8 +1,10 @@
 import { ScriptTokenizer, TokenType } from "./tokenizer";
 
 export enum CommandCode {
-    END_SCRIPT,
+    END,
     SIMULATOR,
+    REPEAT,
+    REPEAT_END,
 }
 
 export enum TerminatorType {
@@ -54,14 +56,25 @@ export class Script {
 
     buildScript() {
         let command: Command | null = null
+        let repeatOpen = false;
         while (this.input.hasMoreTokens()) {
             this.input.advance();
 
             switch (this.input.token.type) {
+                case TokenType.REPEAT:
+                    command = this.createRepeatCommand();
+                    repeatOpen = true;
+                    break;
                 case TokenType.IDENTIFIER:
                     // read arg
                     const args = this.readArg();
                     command = new Command(CommandCode.SIMULATOR, args);
+                    break;
+                case TokenType.RBRACE:
+                    if (repeatOpen) {
+                        command = new Command(CommandCode.REPEAT_END, []);
+                        repeatOpen = false;
+                    }
                     break;
             }
 
@@ -79,7 +92,16 @@ export class Script {
             command = null;
         }
 
-        command = new Command(CommandCode.END_SCRIPT, []);
+        command = new Command(CommandCode.END, []);
         this.commands.push(command);
+        console.log(this.commands);
+    }
+
+    createRepeatCommand(): Command {
+        this.input.advance();
+        if (this.input.token.type !== TokenType.LBRACE) {
+            this.input.fail("Missing '{' in repeat command");
+        }
+        return new Command(CommandCode.REPEAT, []);
     }
 }
