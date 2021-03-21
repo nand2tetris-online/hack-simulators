@@ -4,6 +4,9 @@ export enum TokenType {
   EOF = 'EOF',
 
   REPEAT = 'REPEAT',
+  OUTPUT_FILE = 'OUTPUT-FILE',
+  COMPARE_TO = 'COMPARE-TO',
+  OUTPUT_LIST = 'OUTPUT-LIST',
 
   SEMICOLON = 'SEMICOLON',
   COMMA = 'COMMA',
@@ -37,6 +40,9 @@ export class ScriptTokenizer {
     this.cur = ''
     this.keywords = {
       'repeat': TokenType.REPEAT,
+      'output-file': TokenType.OUTPUT_FILE,
+      'compare-to': TokenType.COMPARE_TO,
+      'output-list': TokenType.OUTPUT_LIST,
     };
 
     this.readChar()
@@ -96,7 +102,7 @@ export class ScriptTokenizer {
 
   private readIdentifier (): string {
     const pos = this.pos
-    while (isLetter(this.cur) || isDigit(this.cur)) {
+    while (isLetter(this.cur) || isDigit(this.cur) || this.cur === '-' || this.cur === '.' || this.cur === '%') {
       this.readChar()
     }
     return this.input.substring(pos, this.pos)

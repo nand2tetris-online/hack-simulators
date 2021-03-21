@@ -38,5 +38,31 @@ describe('Scripts', () => {
             ];
             expect(script.commands.map((c) => c.code)).toEqual(expectedCodes);
         });
+
+        it('nots', () => {
+            const testScript =`load Not.hdl,
+                output-file Not.out,
+                compare-to Not.cmp,
+                output-list in%B3.1.3 out%B3.1.3;
+
+                set in 0,
+                eval,
+                output;
+
+                set in 1,
+                eval,
+                output;`
+
+            const script = new Script(testScript);
+
+            const expectedCodes = [
+                CommandCode.REPEAT,
+                CommandCode.SIMULATOR,
+                CommandCode.SIMULATOR,
+                CommandCode.REPEAT_END,
+                CommandCode.END,
+            ];
+            expect(script.commands.map((c) => c.code)).toEqual(expectedCodes);
+        });
     });
 });

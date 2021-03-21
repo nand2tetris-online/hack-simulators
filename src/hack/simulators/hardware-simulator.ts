@@ -6,13 +6,18 @@ export class HardwareSimulator {
     gate: Gate | null
     clockUp: boolean
 
+    // TODO: too many instances of this floating around, need to clean it up
+    userWorkspace: UserWorkspace | null;
+
     constructor() {
         this.gate = null
         this.clockUp = false
+        this.userWorkspace = null;
     }
 
-    loadGate(name: string, userDefinedParts: UserWorkspace) {
-        this.gate = getGateClass(name, userDefinedParts).newInstance()
+    loadGate(name: string, userWorkspace: UserWorkspace) {
+        this.gate = getGateClass(name, userWorkspace).newInstance();
+        this.userWorkspace = userWorkspace;
     }
 
     step() {
@@ -53,6 +58,10 @@ export class HardwareSimulator {
             this.performTick();
         } else if (command[0] === 'tock') {
             this.performTock();
+        } else if (command[0] === 'load') {
+            if (!this.userWorkspace) { return; }
+            // TODO: BUG: reload gate hdl in UI
+            this.loadGate(command[1].slice(0, -4), this.userWorkspace);
         }
     }
 }

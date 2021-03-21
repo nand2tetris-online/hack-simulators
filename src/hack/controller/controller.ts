@@ -1,7 +1,7 @@
 import { UserWorkspace } from "../gates/composite-gateclass";
 import { Gate } from "../gates/gate";
 import { HardwareSimulator } from "../simulators/hardware-simulator";
-import { Command, CommandCode, Script, TerminatorType } from "./script";
+import { Command, CommandCode, Script, TerminatorType, VariableFormat } from "./script";
 
 export class HackController {
     simulator: HardwareSimulator;
@@ -10,12 +10,20 @@ export class HackController {
     currentCommandIndex: number;
     loopCommandIndex: number;
 
+    varList: VariableFormat[];
+
+    output: string;
+
     constructor(simulator: HardwareSimulator) {
         this.simulator = simulator;
         this.script = null;
 
         this.currentCommandIndex = 0;
         this.loopCommandIndex = 0;
+
+        this.varList = [];
+
+        this.output = '';
     }
 
     getGate(): Gate | null {
@@ -54,11 +62,24 @@ export class HackController {
             switch (command.code) {
                 case CommandCode.SIMULATOR:
                     this.simulator.doCommand(command.getArg());
-                break;
+                    break;
+                case CommandCode.OUTPUT_FILE:
+                    // set current output file name
+                    // clear output file
+                    console.log('output file');
+                    break;
+                case CommandCode.COMPARE_TO:
+                    // set current output file name
+                    // clear output file
+                    console.log('compare to');
+                    break;
+                case CommandCode.OUTPUT_LIST:
+                    this.doOutputListCommand(command);
+                    break;
                 case CommandCode.REPEAT:
                     this.loopCommandIndex = this.currentCommandIndex + 1;
-                redo = true;
-                break;
+                    redo = true;
+                    break;
             }
 
             if (command.code !== CommandCode.END) {
@@ -73,5 +94,25 @@ export class HackController {
         if (!command) { throw new Error("No command found."); } // TODO: rm
 
         return command.terminator
+    }
+
+    doOutputListCommand(command: Command) {
+        this.varList = command.getArg();
+        let line = '|';
+        for (let i=0; i<this.varList.length; i++) {
+            const vars = this.varList[i];
+            const space = vars.padL + vars.padR + vars.len;
+            const varName = vars.varName.length > space ? vars.varName.substring(0, space) : vars.varName;
+            const leftSpace = Math.floor((space - varName.length)/2);
+            const rightSpace = space - leftSpace - varName.length;
+            line += ' '.repeat(leftSpace) + varName + ' '.repeat(rightSpace) + '|';
+        }
+        this.outputAndCompare(line);
+    }
+
+    outputAndCompare(line: string) {
+        this.output += line;
+        // TODO: do comparison and report failure if so
+        console.log(this.output);
     }
 }
