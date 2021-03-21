@@ -38,7 +38,7 @@ export default function HardwareSimulatorUI() {
 
   const [format, setFormat] = useState<string>("decimal")
 
-  const controller = useRef(new HackController(new HardwareSimulator(), setStatus))
+  const controller = useRef(new HackController(new HardwareSimulator(setGateFilename), setStatus))
 
   // update UI
   const updatePinData = useCallback(() => {

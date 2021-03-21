@@ -12,7 +12,11 @@ export class HardwareSimulator {
     // TODO: too many instances of this floating around, need to clean it up
     userWorkspace: UserWorkspace | null;
 
-    constructor() {
+    // TODO: this needs to go away
+    setGateFilename: (_:string) => void;
+
+    constructor(setGateFilename: (_:string) => void) {
+        this.setGateFilename = setGateFilename;
         this.gate = null
         this.clockUp = false
         this.time = 0;
@@ -99,6 +103,7 @@ export class HardwareSimulator {
             if (!this.userWorkspace) { return; }
             // TODO: BUG: reload gate hdl in UI
             this.loadGate(command[1].slice(0, -4), this.userWorkspace);
+            this.setGateFilename(command[1]);
         } else if (commandName === 'set') {
             this.setValue(command[1], command[2]);
         } else if (commandName === 'eval') {
