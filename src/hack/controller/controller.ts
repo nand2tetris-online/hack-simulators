@@ -1,7 +1,7 @@
 import { UserWorkspace } from "../gates/composite-gateclass";
 import { Gate } from "../gates/gate";
 import { HardwareSimulator } from "../simulators/hardware-simulator";
-import { CommandCode, Script } from "./script";
+import { Command, CommandCode, Script, TerminatorType } from "./script";
 
 export class HackController {
     simulator: HardwareSimulator;
@@ -36,18 +36,19 @@ export class HackController {
     }
 
     singleStep() {
-        this.miniStep();
+        let terminatorType: TerminatorType | undefined
+        do {
+            terminatorType = this.miniStep();
+        } while (terminatorType === TerminatorType.MINI_STEP);
     }
 
-    miniStep() {
+    miniStep(): TerminatorType | undefined {
         let redo = false;
+        let command: Command | undefined
 
         do {
-            const command = this.script?.getCommandAt(this.currentCommandIndex);
-            if (!command) {
-                console.log("No command found.");
-                return;
-            }
+            command = this.script?.getCommandAt(this.currentCommandIndex);
+            if (!command) { throw new Error("No command found."); } // TODO: rm
             redo = false;
 
             switch (command.code) {
@@ -68,5 +69,9 @@ export class HackController {
                 }
             }
         } while (redo);
+
+        if (!command) { throw new Error("No command found."); } // TODO: rm
+
+        return command.terminator
     }
 }

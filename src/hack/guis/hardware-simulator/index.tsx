@@ -91,7 +91,7 @@ export default function HardwareSimulatorUI() {
     hdl = userWorkspace.get(gateFilename) ?? ""
   }
 
-  userWorkspace?.set("default.tst", "repeat {\n    tick;\n    tock;\n}")
+  userWorkspace?.set("default.tst", "repeat {\n    tick,\n    tock;\n}")
   // userWorkspace?.set("default.tst", "tick;\ntock;\ntick;\n")
   const displayScript = (testScript ? userWorkspace?.get(testScript) : null) ?? "No test found"
 

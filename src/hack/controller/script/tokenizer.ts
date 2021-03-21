@@ -1,11 +1,12 @@
 export enum TokenType {
   IDENTIFIER = 'IDENTIFIER',
   INT = 'INT',
-  SEMICOLON = 'SEMICOLON',
   EOF = 'EOF',
 
   REPEAT = 'REPEAT',
 
+  SEMICOLON = 'SEMICOLON',
+  COMMA = 'COMMA',
   LBRACE = '{',
   RBRACE = '}',
 
@@ -50,15 +51,18 @@ export class ScriptTokenizer {
 
     this.token.literal = this.cur
     switch (this.cur) {
+      case ';':
+        this.token.type = TokenType.SEMICOLON
+        break;
+      case ',':
+        this.token.type = TokenType.COMMA
+        break;
       case '{':
         this.token.type = TokenType.LBRACE
         break
       case '}':
         this.token.type = TokenType.RBRACE
-        break
-      case ';':
-        this.token.type = TokenType.SEMICOLON
-        break
+        break;
       case '':
         this.token.type = TokenType.EOF
         break

@@ -9,17 +9,17 @@ export enum CommandCode {
 
 export enum TerminatorType {
     SINGLE_STEP,
+    MINI_STEP,
 }
 
 export class Command {
     code: CommandCode
     args: string[];
-    terminator: TerminatorType | null
+    terminator: TerminatorType | undefined
 
     constructor(code: CommandCode, arg: string[]) {
         this.code = code;
         this.args = arg;
-        this.terminator = null;
     }
 
     getArg(): string[] {
@@ -30,6 +30,7 @@ export class Command {
         this.terminator = type;
     }
 }
+
 
 export class Script {
     input: ScriptTokenizer;
@@ -47,7 +48,9 @@ export class Script {
 
     readArg(): string[] {
         let args = [];
-        while (this.input.hasMoreTokens() && (this.input.token.type !== TokenType.SEMICOLON)) {
+        while (this.input.hasMoreTokens() &&
+                (this.input.token.type !== TokenType.SEMICOLON) &&
+                    (this.input.token.type !== TokenType.COMMA)) {
             args.push(this.input.token.literal ?? "");
             this.input.advance();
         }
@@ -82,12 +85,15 @@ export class Script {
                 this.commands.push(command);
                 switch (this.input.token.type) {
                     case TokenType.SEMICOLON:
-                        command.setTerminator(TerminatorType.SINGLE_STEP);
+                        command.terminator = TerminatorType.SINGLE_STEP;
+                        break;
+                    case TokenType.COMMA:
+                        command.terminator = TerminatorType.MINI_STEP;
                         break;
                 }
             }
 
-            // may not need this in the end, but I seem to need it now
+            // TODO: may not need this in the end, but I seem to need it now
             // I senese trouble ahead
             command = null;
         }
