@@ -22,8 +22,12 @@ export class HackController {
 
     userWorkspace: UserWorkspace;
 
-    constructor(simulator: HardwareSimulator) {
+    displayMessage: (message: string, error: boolean) => void;
+
+    constructor(simulator: HardwareSimulator, displayMessage: (_:string) => void) {
         this.simulator = simulator;
+        this.displayMessage = (m, e) => displayMessage(m);
+
         this.script = null;
 
         this.currentCommandIndex = 0;
@@ -163,7 +167,7 @@ export class HackController {
     }
 
     outputAndCompare(line: string) {
-        this.output += `${line}\n`;
+        this.output += line + '\n';
         this.outputLinesCounter++;
 
         if (this.compare.length > 0) {
@@ -181,9 +185,5 @@ export class HackController {
     compareLine(line: string, compareLine: string): boolean {
         console.log(line, compareLine.trim());
         return compareLine.trim() === line;
-    }
-
-    displayMessage(message: string, error: boolean) {
-        console.log(message);
     }
 }
