@@ -67,14 +67,17 @@ export class HackController {
                     // set current output file name
                     // clear output file
                     console.log('output file');
+                    this.output = '';
                     break;
                 case CommandCode.COMPARE_TO:
-                    // set current output file name
-                    // clear output file
+                    // set compare to file name
                     console.log('compare to');
                     break;
                 case CommandCode.OUTPUT_LIST:
                     this.doOutputListCommand(command);
+                    break;
+                case CommandCode.OUTPUT:
+                    this.doOutputCommand(command);
                     break;
                 case CommandCode.REPEAT:
                     this.loopCommandIndex = this.currentCommandIndex + 1;
@@ -96,6 +99,25 @@ export class HackController {
         return command.terminator
     }
 
+    doOutputCommand(command: Command) {
+        let line = '|';
+        for (let i=0; i<this.varList.length; i++) {
+            const vars = this.varList[i];
+            let value: string = this.simulator.getValue(vars.varName);
+            if (vars.format !== 'S') {
+                let numValue: number = parseInt(value);
+                if (vars.format === 'B') {
+                    value = numValue.toString(2).padStart(16, '0');
+                }
+            }
+            if (value.length > vars.len) {
+                value = value.substring(value.length - vars.len);
+            }
+            line += ' '.repeat(vars.padL) + value + ' '.repeat(vars.padR) + '|';
+        }
+        this.outputAndCompare(line + '\n');
+    }
+
     doOutputListCommand(command: Command) {
         this.varList = command.getArg();
         let line = '|';
@@ -107,7 +129,7 @@ export class HackController {
             const rightSpace = space - leftSpace - varName.length;
             line += ' '.repeat(leftSpace) + varName + ' '.repeat(rightSpace) + '|';
         }
-        this.outputAndCompare(line);
+        this.outputAndCompare(line + '\n');
     }
 
     outputAndCompare(line: string) {

@@ -7,6 +7,7 @@ export enum TokenType {
   OUTPUT_FILE = 'OUTPUT-FILE',
   COMPARE_TO = 'COMPARE-TO',
   OUTPUT_LIST = 'OUTPUT-LIST',
+  OUTPUT = 'OUTPUT',
 
   SEMICOLON = 'SEMICOLON',
   COMMA = 'COMMA',
@@ -43,6 +44,7 @@ export class ScriptTokenizer {
       'output-file': TokenType.OUTPUT_FILE,
       'compare-to': TokenType.COMPARE_TO,
       'output-list': TokenType.OUTPUT_LIST,
+      'output': TokenType.OUTPUT,
     };
 
     this.readChar()
@@ -102,7 +104,7 @@ export class ScriptTokenizer {
 
   private readIdentifier (): string {
     const pos = this.pos
-    while (isLetter(this.cur) || isDigit(this.cur) || this.cur === '-' || this.cur === '.' || this.cur === '%') {
+    while (isLetter(this.cur) || isDigit(this.cur) || this.cur === '-' || this.cur === '.') {
       this.readChar()
     }
     return this.input.substring(pos, this.pos)
@@ -160,7 +162,7 @@ export class ScriptTokenizer {
 
 function isLetter (char: string): boolean {
   const n = char.charCodeAt(0)
-  return (n >= 65 && n < 91) || (n >= 97 && n < 123)
+  return (n >= 65 && n < 91) || (n >= 97 && n < 123) || char === '%';
 }
 
 function isDigit (char: string): boolean {

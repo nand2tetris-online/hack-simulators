@@ -24,6 +24,7 @@ export enum CommandCode {
     OUTPUT_FILE,
     COMPARE_TO,
     OUTPUT_LIST,
+    OUTPUT,
 }
 
 export enum TerminatorType {
@@ -99,6 +100,9 @@ export class Script {
                 case TokenType.OUTPUT_LIST:
                     command = this.createOutputListCommand();
                     break;
+                case TokenType.OUTPUT:
+                    command = this.createOutputCommand();
+                    break;
                 case TokenType.IDENTIFIER:
                     // read arg
                     const args = this.readArgs(4); // 4 = MAX_SIMULARTS_ARGS_COUNT
@@ -134,10 +138,15 @@ export class Script {
         // console.log(this.commands);
     }
 
-    createOutputFileCommand(): Command | never {
+    createOutputFileCommand(): Command {
         this.input.advance();
         const args: string[] = this.readArgs(1);
         return new Command(CommandCode.OUTPUT_FILE, args);
+    }
+
+    createOutputCommand(): Command {
+        this.input.advance();
+        return new Command(CommandCode.OUTPUT, []);
     }
 
     createCompareToCommand(): Command | never {
@@ -168,7 +177,7 @@ export class Script {
 
             let dotPos1 = args[i].indexOf('.', percentPos);
             if (dotPos1 === -1) {
-                throw new Error("Missnig '.'");
+                throw new Error("Missing '.'");
             }
             let padL = parseInt(args[i].substring(percentPos + 2, dotPos1));
 
