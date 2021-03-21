@@ -61,6 +61,10 @@ export class HackController {
         this.userWorkspace = userWorkspace;
         const testScript = userWorkspace.get(scriptName) ?? "tick; tock;";
         this.script = new Script(testScript);
+        this.currentCommandIndex = 0;
+        this.output = '';
+        this.compare = [];
+        this.displayMessage("New script loaded " + scriptName, false);
     }
 
     setInputPin(pinNumber: number, value: number) {
@@ -91,10 +95,13 @@ export class HackController {
                     // set current output file name
                     // clear output file
                     this.output = '';
+                    this.outputLinesCounter = 0
                     break;
                 case CommandCode.COMPARE_TO:
                     // set compare to file name
                     this.compare = this.userWorkspace.get(command.getArg()[0])?.split('\n') ?? [];
+                    this.compareLinesCounter = 0;
+                    this.comparisonFailed = false;
                     break;
                 case CommandCode.OUTPUT_LIST:
                     this.doOutputListCommand(command);
