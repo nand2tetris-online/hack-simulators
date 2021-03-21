@@ -73,8 +73,6 @@ export class HardwareSimulator {
         if (this.gate === null) { throw new Error(""); }
         let decimalForm = toDecimalForm(value);
 
-        console.log(varName, value, decimalForm);
-
         const numValue = parseInt(decimalForm);
         const node: Node | null = this.gate.getNode(varName);
         if (node) {
@@ -84,10 +82,10 @@ export class HardwareSimulator {
     }
 
     doCommand(command: string[]) {
-        console.log("doCommand", command);
+        // console.log("doCommand", command);
         if (command.length === 0) {
             // TODO: throw error
-            console.log("No command");
+            // console.log("No command");
             return;
         }
 

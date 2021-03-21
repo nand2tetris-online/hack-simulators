@@ -135,7 +135,6 @@ export class Script {
 
         command = new Command(CommandCode.END, []);
         this.commands.push(command);
-        // console.log(this.commands);
     }
 
     createOutputFileCommand(): Command {
@@ -158,7 +157,6 @@ export class Script {
     createOutputListCommand(): Command | never {
         this.input.advance();
         const args: string[] = this.readArgs(20);
-        console.log(args);
 
         let count;
         for (count=0; count<args.length && args[count] !== undefined; count++);

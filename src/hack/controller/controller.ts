@@ -13,6 +13,14 @@ export class HackController {
     varList: VariableFormat[];
 
     output: string;
+    outputLinesCounter: number;
+
+    compare: string[];
+    compareLinesCounter: number;
+    comparisonFailed: boolean;
+    comparisonFailureLine: number;
+
+    userWorkspace: UserWorkspace;
 
     constructor(simulator: HardwareSimulator) {
         this.simulator = simulator;
@@ -24,6 +32,14 @@ export class HackController {
         this.varList = [];
 
         this.output = '';
+        this.outputLinesCounter = 0;
+
+        this.compare = [];
+        this.compareLinesCounter = 0;
+        this.comparisonFailed = false;
+        this.comparisonFailureLine = 0;
+
+        this.userWorkspace = new Map();
     }
 
     getGate(): Gate | null {
@@ -31,10 +47,14 @@ export class HackController {
     }
 
     loadGate(gateName: string, userWorkspace: UserWorkspace) {
+        // TODO: this is me being lazy
+        this.userWorkspace = userWorkspace;
         this.simulator.loadGate(gateName, userWorkspace);
     }
 
     loadScript(scriptName: string, userWorkspace: UserWorkspace) {
+        // TODO: this is me being lazy
+        this.userWorkspace = userWorkspace;
         const testScript = userWorkspace.get(scriptName) ?? "tick; tock;";
         this.script = new Script(testScript);
     }
@@ -66,12 +86,11 @@ export class HackController {
                 case CommandCode.OUTPUT_FILE:
                     // set current output file name
                     // clear output file
-                    console.log('output file');
                     this.output = '';
                     break;
                 case CommandCode.COMPARE_TO:
                     // set compare to file name
-                    console.log('compare to');
+                    this.compare = this.userWorkspace.get(command.getArg()[0])?.split('\n') ?? [];
                     break;
                 case CommandCode.OUTPUT_LIST:
                     this.doOutputListCommand(command);
@@ -82,6 +101,17 @@ export class HackController {
                 case CommandCode.REPEAT:
                     this.loopCommandIndex = this.currentCommandIndex + 1;
                     redo = true;
+                    break;
+                case CommandCode.END:
+                    if (this.compare) {
+                        if (this.comparisonFailed) {
+                            this.displayMessage(`End of script - Comparison failure at line ${this.comparisonFailureLine}`, true);
+                        } else {
+                            this.displayMessage(`End of script - Comparison ended successfully`, false);
+                        }
+                    } else {
+                        this.displayMessage('End of script', false);
+                    }
                     break;
             }
 
@@ -115,7 +145,7 @@ export class HackController {
             }
             line += ' '.repeat(vars.padL) + value + ' '.repeat(vars.padR) + '|';
         }
-        this.outputAndCompare(line + '\n');
+        this.outputAndCompare(line);
     }
 
     doOutputListCommand(command: Command) {
@@ -129,12 +159,31 @@ export class HackController {
             const rightSpace = space - leftSpace - varName.length;
             line += ' '.repeat(leftSpace) + varName + ' '.repeat(rightSpace) + '|';
         }
-        this.outputAndCompare(line + '\n');
+        this.outputAndCompare(line);
     }
 
     outputAndCompare(line: string) {
-        this.output += line;
-        // TODO: do comparison and report failure if so
-        console.log(this.output);
+        this.output += `${line}\n`;
+        this.outputLinesCounter++;
+
+        if (this.compare.length > 0) {
+            const compareLine = this.compare[this.compareLinesCounter];
+            this.compareLinesCounter++;
+
+            if (!this.compareLine(line, compareLine)) {
+                this.comparisonFailed = true;
+                this.comparisonFailureLine = this.compareLinesCounter;
+                this.displayMessage(`Comparison failure at line ${this.comparisonFailureLine}`, true);
+            }
+        }
+    }
+
+    compareLine(line: string, compareLine: string): boolean {
+        console.log(line, compareLine.trim());
+        return compareLine.trim() === line;
+    }
+
+    displayMessage(message: string, error: boolean) {
+        console.log(message);
     }
 }
