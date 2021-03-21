@@ -9,6 +9,7 @@ import { StatusMessage } from "./status-message"
 import { HardwareSimulator } from "../../simulators/hardware-simulator"
 import { Gate } from "../../gates/gate"
 import { TestScript } from "./test-script"
+import { HackController } from "../../controller/controller"
 
 export type PinUpdate = {
   value: string
@@ -37,11 +38,11 @@ export default function HardwareSimulatorUI() {
 
   const [format, setFormat] = useState<string>("decimal")
 
-  const simulator = useRef(new HardwareSimulator())
+  const controller = useRef(new HackController(new HardwareSimulator()))
 
   // update UI
   const updatePinData = useCallback(() => {
-    const gate = simulator.current.gate
+    const gate = controller.current.getGate()
     if (!gate) {
       throw new Error("updatePinData: gate can not be null")
     }
@@ -57,18 +58,24 @@ export default function HardwareSimulatorUI() {
     if (!gateFilename.endsWith(".hdl")) { return }
     const gateName = gateFilename.slice(0, -4)
     try {
-      simulator.current.loadGate(gateName, userWorkspace)
+      controller.current.loadGate(gateName, userWorkspace)
       updatePinData()
       setStatus("Loaded successfully!")
-      console.log(simulator.current.gate)
+      console.log(controller.current.getGate())
     } catch (error) {
       setStatus(`${error}`)
     }
   }, [gateFilename, userWorkspace, updatePinData])
 
+  // set up test script
+  useEffect(() => {
+    if (!testScript || !userWorkspace) { return; }
+    controller.current.loadScript(testScript, userWorkspace)
+  }, [testScript, userWorkspace]);
+
   // step forward one time unit
   const singleStep = useCallback(() => {
-    simulator.current.step()
+    controller.current.singleStep()
     updatePinData()
   }, [updatePinData])
 
@@ -76,7 +83,7 @@ export default function HardwareSimulatorUI() {
   const updateInputPin = useCallback(({ value, number, type }: PinUpdate) => {
     // can only update input pins
     if (type !== PinType.INPUT) { return }
-    simulator.current.setInputPin(number, parseInt(value) || 0)
+    controller.current.setInputPin(number, parseInt(value) || 0)
     updatePinData()
   }, [updatePinData])
 
@@ -85,7 +92,8 @@ export default function HardwareSimulatorUI() {
     hdl = userWorkspace.get(gateFilename) ?? ""
   }
 
-  userWorkspace?.set("default.tst", "repeat {\n    tick,\n    tock;\n}")
+  // userWorkspace?.set("default.tst", "repeat {\n    tick,\n    tock;\n}")
+  userWorkspace?.set("default.tst", "tick;\ntock;\n")
   const displayScript = (testScript ? userWorkspace?.get(testScript) : null) ?? "No test found"
 
   return (

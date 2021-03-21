@@ -40,4 +40,18 @@ export class HardwareSimulator {
     setInputPin(pinNumber: number, value: number) {
         this.gate?.inputPins[pinNumber].set(value)
     }
+
+    doCommand(command: string[]) {
+        if (command.length === 0) {
+            // TODO: throw error
+            console.log("No command");
+            return;
+        }
+
+        if (command[0] === 'tick') {
+            this.performTick();
+        } else if (command[0] === 'tock') {
+            this.performTock();
+        }
+    }
 }
