@@ -18,15 +18,13 @@ export class CompositeGate extends Gate {
 
   clockUp() {
     if (this.gateClass.isClocked) {
-      for (const part of this.parts) {
-        part.tock()
-      }
+      for (const part of this.parts) part.tick();
     }
   }
 
   clockDown() {
     if (this.gateClass.isClocked)
-      for (const part of this.parts) part.tick()
+      for (const part of this.parts) part.tock();
   }
 
   getNode(name: string): Node | null {

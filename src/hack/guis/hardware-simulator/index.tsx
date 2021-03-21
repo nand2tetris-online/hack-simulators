@@ -61,7 +61,6 @@ export default function HardwareSimulatorUI() {
       controller.current.loadGate(gateName, userWorkspace)
       updatePinData()
       setStatus("Loaded successfully!")
-      console.log(controller.current.getGate())
     } catch (error) {
       setStatus(`${error}`)
     }
@@ -93,7 +92,7 @@ export default function HardwareSimulatorUI() {
   }
 
   // userWorkspace?.set("default.tst", "repeat {\n    tick,\n    tock;\n}")
-  userWorkspace?.set("default.tst", "tick;\ntock;\n")
+  userWorkspace?.set("default.tst", "tick;\ntock;\ntick;\n")
   const displayScript = (testScript ? userWorkspace?.get(testScript) : null) ?? "No test found"
 
   return (

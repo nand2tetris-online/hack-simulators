@@ -24,14 +24,14 @@ export class HardwareSimulator {
     }
 
     performTock() {
-        if (this.gate === null) return
+        if (this.gate === null) return;
 
         this.gate.tock()
         this.clockUp = false
     }
 
     performTick() {
-        if (this.gate === null) return
+        if (this.gate === null) return;
 
         this.gate.tick()
         this.clockUp = true
@@ -42,6 +42,7 @@ export class HardwareSimulator {
     }
 
     doCommand(command: string[]) {
+        console.log("doCommand", command);
         if (command.length === 0) {
             // TODO: throw error
             console.log("No command");
