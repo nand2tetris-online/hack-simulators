@@ -36,6 +36,13 @@ export class HardwareSimulator {
         }
     }
 
+    restart() {
+        // reset input pins to 0
+        this.gate?.eval();
+        this.time = 0;
+        this.clockUp = false;
+    }
+
     performTock() {
         if (this.gate === null) return;
 

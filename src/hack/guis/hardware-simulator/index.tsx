@@ -80,6 +80,11 @@ export default function HardwareSimulatorUI() {
     updatePinData()
   }, [updatePinData])
 
+  const rewind = useCallback(() => {
+    controller.current.rewind()
+    updatePinData()
+  }, [updatePinData])
+
   // set input pin
   const updateInputPin = useCallback(({ value, number, type }: PinUpdate) => {
     // can only update input pins
@@ -110,7 +115,8 @@ export default function HardwareSimulatorUI() {
         testScript={testScript}
         setTestScript={setTestScript}
         setFormat={setFormat}
-        singleStep={singleStep} />
+        singleStep={singleStep}
+        rewind={rewind} />
       <div className="container">
         <Pins title="Input Pins" type={PinType.INPUT} pinData={pinData.input} updatePin={updateInputPin} format={format} />
         <Pins title="Output Pins" type={PinType.OUTPUT} pinData={pinData.output} updatePin={updateInputPin} format={format} />

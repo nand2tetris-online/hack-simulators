@@ -82,6 +82,24 @@ export class HackController {
         this.setTestScriptLine(this.script?.lineNumbers[this.currentCommandIndex] ?? -1);
     }
 
+    resetOutput() {
+        this.output = '';
+        this.outputLinesCounter = 0
+    }
+
+    resetCompare() {
+        this.compareLinesCounter = 0;
+        this.comparisonFailed = false;
+    }
+
+    rewind() {
+        this.simulator.restart();
+        this.resetOutput();
+        this.resetCompare();
+        this.currentCommandIndex = 0;
+        this.setTestScriptLine(this.script?.lineNumbers[0] ?? -1);
+    }
+
     miniStep(): TerminatorType | undefined {
         let redo = false;
         let command: Command | undefined
@@ -98,14 +116,12 @@ export class HackController {
                 case CommandCode.OUTPUT_FILE:
                     // set current output file name
                     // clear output file
-                    this.output = '';
-                    this.outputLinesCounter = 0
+                    this.resetOutput();
                     break;
                 case CommandCode.COMPARE_TO:
                     // set compare to file name
                     this.compare = this.userWorkspace.get(command.getArg()[0])?.split('\n') ?? [];
-                    this.compareLinesCounter = 0;
-                    this.comparisonFailed = false;
+                    this.resetCompare();
                     break;
                 case CommandCode.OUTPUT_LIST:
                     this.doOutputListCommand(command);
