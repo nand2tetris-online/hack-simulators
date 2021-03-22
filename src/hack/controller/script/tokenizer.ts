@@ -34,6 +34,9 @@ export class ScriptTokenizer {
   // current token
   token: Token = { type: null, literal: null }
 
+  lineNumber: number;
+
+
   constructor (input: string) {
     this.input = input
     this.readpos = 0
@@ -47,6 +50,7 @@ export class ScriptTokenizer {
       'output': TokenType.OUTPUT,
     };
 
+    this.lineNumber = 0;
     this.readChar()
   }
 
@@ -134,6 +138,8 @@ export class ScriptTokenizer {
 
     while (true) {
       const peek = this.peekChar()
+
+      if (this.cur === '\n') { this.lineNumber++; }
 
       // isSlashCommentStart
       if (this.cur === '/' && peek === '/') {

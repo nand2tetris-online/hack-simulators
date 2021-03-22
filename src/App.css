@@ -26,6 +26,16 @@ input {
   height: 524px;
 }
 
+.testLine {
+  margin: 0;
+  color: black;
+}
+
+.highlight {
+  background-color: blue;
+  color: white;
+}
+
 .hdlViewer {
   overflow: scroll;
   border: 2px solid;

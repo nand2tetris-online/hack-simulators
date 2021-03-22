@@ -51,14 +51,16 @@ export class Command {
     }
 }
 
-
 export class Script {
     input: ScriptTokenizer;
-    commands: Command[]
+    commands: Command[];
+
+    lineNumbers: number[];
 
     constructor(script: string) {
         this.input = new ScriptTokenizer(script);
         this.commands = [];
+        this.lineNumbers = [];
         this.buildScript();
     }
 
@@ -83,7 +85,9 @@ export class Script {
     buildScript() {
         let command: Command | null = null
         let repeatOpen = false;
+        let lineNumber = 0;
         while (this.input.hasMoreTokens()) {
+            lineNumber = this.input.lineNumber - 1;
             this.input.advance();
 
             switch (this.input.token.type) {
@@ -118,6 +122,7 @@ export class Script {
 
             if (command) {
                 this.commands.push(command);
+                this.lineNumbers.push(lineNumber);
                 switch (this.input.token.type) {
                     case TokenType.SEMICOLON:
                         command.terminator = TerminatorType.SINGLE_STEP;
@@ -135,6 +140,7 @@ export class Script {
 
         command = new Command(CommandCode.END, []);
         this.commands.push(command);
+        this.lineNumbers.push(lineNumber);
     }
 
     createOutputFileCommand(): Command {

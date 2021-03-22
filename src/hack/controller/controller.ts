@@ -23,10 +23,12 @@ export class HackController {
     userWorkspace: UserWorkspace;
 
     displayMessage: (message: string, error: boolean) => void;
+    setTestScriptLine: (line: number) => void;
 
-    constructor(simulator: HardwareSimulator, displayMessage: (_:string) => void) {
+    constructor(simulator: HardwareSimulator, displayMessage: (_:string) => void, setTestScriptLine: (_:number) => void) {
         this.simulator = simulator;
         this.displayMessage = (m, e) => displayMessage(m);
+        this.setTestScriptLine = setTestScriptLine;
 
         this.script = null;
 
@@ -62,8 +64,9 @@ export class HackController {
         const testScript = userWorkspace.get(scriptName) ?? "tick; tock;";
         this.script = new Script(testScript);
         this.currentCommandIndex = 0;
+        this.setTestScriptLine(this.script.lineNumbers[0]);
         this.output = '';
-        this.compare = [];
+        this.compare = []
         this.displayMessage("New script loaded " + scriptName, false);
     }
 
@@ -76,6 +79,7 @@ export class HackController {
         do {
             terminatorType = this.miniStep();
         } while (terminatorType === TerminatorType.MINI_STEP);
+        this.setTestScriptLine(this.script?.lineNumbers[this.currentCommandIndex] ?? -1);
     }
 
     miniStep(): TerminatorType | undefined {
@@ -128,9 +132,11 @@ export class HackController {
 
             if (command.code !== CommandCode.END) {
                 this.currentCommandIndex++;
+                this.setTestScriptLine(this.currentCommandIndex);
                 const nextCommand = this.script?.getCommandAt(this.currentCommandIndex);
                 if (nextCommand?.code === CommandCode.REPEAT_END) {
                     this.currentCommandIndex = this.loopCommandIndex;
+                    this.setTestScriptLine(this.currentCommandIndex);
                 }
             }
         } while (redo);

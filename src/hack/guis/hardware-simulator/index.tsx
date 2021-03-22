@@ -31,14 +31,16 @@ export type AllPinData = {
 export default function HardwareSimulatorUI() {
   const [userWorkspace, setUserWorkspace] = useState<UserWorkspace | null>(null)
   const [gateFilename, setGateFilename] = useState<string | null>(null)
+
   const [testScript, setTestScript] = useState<string | null>("default.tst")
+  const [testScriptLine, setTestScriptLine] = useState<number | null>(null);
 
   const [pinData, setPinData] = useState<AllPinData>({ input: [], output: [], internal: [] })
   const [status, setStatus] = useState<string | null>(null)
 
   const [format, setFormat] = useState<string>("decimal")
 
-  const controller = useRef(new HackController(new HardwareSimulator(setGateFilename), setStatus))
+  const controller = useRef(new HackController(new HardwareSimulator(setGateFilename), setStatus, setTestScriptLine))
 
   // update UI
   const updatePinData = useCallback(() => {
@@ -114,7 +116,7 @@ export default function HardwareSimulatorUI() {
         <Pins title="Output Pins" type={PinType.OUTPUT} pinData={pinData.output} updatePin={updateInputPin} format={format} />
         <HDLViewer hdl={hdl} />
         <Pins title="Internal Pins" type={PinType.INTERNAL} pinData={pinData.internal} updatePin={updateInputPin} format={format} />
-        <TestScript script={displayScript} />
+        <TestScript script={displayScript} currentLine={testScriptLine} />
       </div>
       <StatusMessage status={status} />
     </div>
