@@ -80,6 +80,11 @@ export default function HardwareSimulatorUI() {
     updatePinData()
   }, [updatePinData])
 
+  const fastForward = useCallback(() => {
+    controller.current.fastForward()
+    updatePinData()
+  }, [updatePinData])
+
   const rewind = useCallback(() => {
     controller.current.rewind()
     updatePinData()
@@ -116,6 +121,7 @@ export default function HardwareSimulatorUI() {
         setTestScript={setTestScript}
         setFormat={setFormat}
         singleStep={singleStep}
+        fastForward={fastForward}
         rewind={rewind} />
       <div className="container">
         <Pins title="Input Pins" type={PinType.INPUT} pinData={pinData.input} updatePin={updateInputPin} format={format} />

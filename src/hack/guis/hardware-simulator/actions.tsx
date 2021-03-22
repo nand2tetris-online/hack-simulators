@@ -9,11 +9,12 @@ export type ActionsProps = {
   testScript: string | null
   setTestScript: (_: string | null) => void
   singleStep: () => void
+  fastForward: () => void
   rewind: () => void
   setFormat: (_: string) => void
 }
 
-export function Actions({ hdlFilename, setHDLFileName, userWorkspace, setUserWorkspace, testScript, setTestScript, singleStep, rewind, setFormat }: ActionsProps) {
+export function Actions({ hdlFilename, setHDLFileName, userWorkspace, setUserWorkspace, testScript, setTestScript, singleStep, fastForward, rewind, setFormat }: ActionsProps) {
   // TODO: make a better approach
   const setWorkingDirectory = useCallback(async (e: ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files
@@ -55,6 +56,7 @@ export function Actions({ hdlFilename, setHDLFileName, userWorkspace, setUserWor
         <option key="hexadecimal" value="hexadecimal">Hexadecimal</option>
       </select>
       <button onClick={singleStep}>Single Step</button>
+      <button onClick={fastForward}>Fast Forward</button>
       <button onClick={rewind}>Rewind</button>
     </div>
   )

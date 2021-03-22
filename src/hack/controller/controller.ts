@@ -25,6 +25,8 @@ export class HackController {
     displayMessage: (message: string, error: boolean) => void;
     setTestScriptLine: (line: number) => void;
 
+    fastForwardRunning: boolean;
+
     constructor(simulator: HardwareSimulator, displayMessage: (_:string) => void, setTestScriptLine: (_:number) => void) {
         this.simulator = simulator;
         this.displayMessage = (m, e) => displayMessage(m);
@@ -44,6 +46,8 @@ export class HackController {
         this.compareLinesCounter = 0;
         this.comparisonFailed = false;
         this.comparisonFailureLine = 0;
+
+        this.fastForwardRunning = false;
 
         this.userWorkspace = new Map();
     }
@@ -80,6 +84,19 @@ export class HackController {
             terminatorType = this.miniStep();
         } while (terminatorType === TerminatorType.MINI_STEP);
         this.setTestScriptLine(this.script?.lineNumbers[this.currentCommandIndex] ?? -1);
+    }
+
+    fastForward() {
+        this.fastForwardRunning = true;
+        while (this.fastForwardRunning) {
+            this.singleStep();
+        }
+    }
+
+    stop() {
+        if (this.fastForwardRunning) {
+            this.fastForwardRunning = false;
+        }
     }
 
     resetOutput() {
@@ -134,6 +151,7 @@ export class HackController {
                     redo = true;
                     break;
                 case CommandCode.END:
+                    this.stop();
                     if (this.compare) {
                         if (this.comparisonFailed) {
                             this.displayMessage(`End of script - Comparison failure at line ${this.comparisonFailureLine}`, true);
