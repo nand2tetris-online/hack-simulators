@@ -1,8 +1,8 @@
 {
   "files": {
-    "main.css": "/hack-simulators/static/css/main.90d72fad.chunk.css",
-    "main.js": "/hack-simulators/static/js/main.9d5dccd7.chunk.js",
-    "main.js.map": "/hack-simulators/static/js/main.9d5dccd7.chunk.js.map",
+    "main.css": "/hack-simulators/static/css/main.785f4621.chunk.css",
+    "main.js": "/hack-simulators/static/js/main.b526cfc1.chunk.js",
+    "main.js.map": "/hack-simulators/static/js/main.b526cfc1.chunk.js.map",
     "runtime-main.js": "/hack-simulators/static/js/runtime-main.8dcf58c2.js",
     "runtime-main.js.map": "/hack-simulators/static/js/runtime-main.8dcf58c2.js.map",
     "static/js/2.e26c35b8.chunk.js": "/hack-simulators/static/js/2.e26c35b8.chunk.js",
@@ -10,13 +10,13 @@
     "static/js/3.e8cd7f2b.chunk.js": "/hack-simulators/static/js/3.e8cd7f2b.chunk.js",
     "static/js/3.e8cd7f2b.chunk.js.map": "/hack-simulators/static/js/3.e8cd7f2b.chunk.js.map",
     "index.html": "/hack-simulators/index.html",
-    "static/css/main.90d72fad.chunk.css.map": "/hack-simulators/static/css/main.90d72fad.chunk.css.map",
+    "static/css/main.785f4621.chunk.css.map": "/hack-simulators/static/css/main.785f4621.chunk.css.map",
     "static/js/2.e26c35b8.chunk.js.LICENSE.txt": "/hack-simulators/static/js/2.e26c35b8.chunk.js.LICENSE.txt"
   },
   "entrypoints": [
     "static/js/runtime-main.8dcf58c2.js",
     "static/js/2.e26c35b8.chunk.js",
-    "static/css/main.90d72fad.chunk.css",
-    "static/js/main.9d5dccd7.chunk.js"
+    "static/css/main.785f4621.chunk.css",
+    "static/js/main.b526cfc1.chunk.js"
   ]
 }
