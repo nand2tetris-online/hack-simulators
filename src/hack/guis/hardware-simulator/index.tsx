@@ -76,17 +76,21 @@ export default function HardwareSimulatorUI() {
 
   // step forward one time unit
   const singleStep = useCallback(() => {
-    controller.current.singleStep()
-    updatePinData()
-  }, [updatePinData])
+    controller.current.singleStep();
+    updatePinData();
+  }, [updatePinData]);
 
   const fastForward = useCallback(() => {
-    controller.current.fastForward()
-    updatePinData()
-  }, [updatePinData])
+    controller.current.fastForward();
+    updatePinData();
+  }, [updatePinData]);
 
-  const rewind = useCallback(() => {
-    controller.current.rewind()
+  const stop = useCallback(() => {
+    controller.current.stop();
+  }, []);
+
+  const restart = useCallback(() => {
+    controller.current.restart()
     updatePinData()
   }, [updatePinData])
 
@@ -122,7 +126,8 @@ export default function HardwareSimulatorUI() {
         setFormat={setFormat}
         singleStep={singleStep}
         fastForward={fastForward}
-        rewind={rewind} />
+        stop={stop}
+        restart={restart} />
       <div className="container">
         <Pins title="Input Pins" type={PinType.INPUT} pinData={pinData.input} updatePin={updateInputPin} format={format} />
         <Pins title="Output Pins" type={PinType.OUTPUT} pinData={pinData.output} updatePin={updateInputPin} format={format} />

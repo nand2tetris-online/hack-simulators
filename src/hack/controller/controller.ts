@@ -26,6 +26,7 @@ export class HackController {
     setTestScriptLine: (line: number) => void;
 
     fastForwardRunning: boolean;
+    fastForwardInterval: NodeJS.Timeout | null ;
 
     constructor(simulator: HardwareSimulator, displayMessage: (_:string) => void, setTestScriptLine: (_:number) => void) {
         this.simulator = simulator;
@@ -48,6 +49,7 @@ export class HackController {
         this.comparisonFailureLine = 0;
 
         this.fastForwardRunning = false;
+        this.fastForwardInterval = null;
 
         this.userWorkspace = new Map();
     }
@@ -79,6 +81,7 @@ export class HackController {
     }
 
     singleStep() {
+        this.displayMessage('', false);
         let terminatorType: TerminatorType | undefined
         do {
             terminatorType = this.miniStep();
@@ -87,15 +90,20 @@ export class HackController {
     }
 
     fastForward() {
+        this.displayMessage('', false);
         this.fastForwardRunning = true;
+        /* TODO: use this for noAnimation mode
         while (this.fastForwardRunning) {
             this.singleStep();
         }
+        */
+       this.fastForwardInterval = setInterval(() => { this.singleStep(); }, 500);
     }
 
     stop() {
-        if (this.fastForwardRunning) {
+        if (this.fastForwardRunning && this.fastForwardInterval) {
             this.fastForwardRunning = false;
+            clearInterval(this.fastForwardInterval);
         }
     }
 
@@ -109,7 +117,7 @@ export class HackController {
         this.comparisonFailed = false;
     }
 
-    rewind() {
+    restart() {
         this.simulator.restart();
         this.resetOutput();
         this.resetCompare();
@@ -230,7 +238,6 @@ export class HackController {
     }
 
     compareLine(line: string, compareLine: string): boolean {
-        console.log(line, compareLine.trim());
         return compareLine.trim() === line;
     }
 }

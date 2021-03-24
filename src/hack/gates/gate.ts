@@ -29,13 +29,11 @@ export abstract class Gate {
     }
 
     tick() {
-        console.log("Gate tick()")
         this.doEval()
         this.clockUp()
     }
 
     tock() {
-        console.log("Gate tock()")
         this.clockDown()
         this.doEval()
     }
