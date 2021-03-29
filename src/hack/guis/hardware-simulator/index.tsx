@@ -44,34 +44,34 @@ export default function HardwareSimulatorUI() {
 
   // update UI
   const updatePinData = useCallback(() => {
-    const gate = controller.current.getGate()
+    const gate = controller.current.getGate();
     if (!gate) {
-      throw new Error("updatePinData: gate can not be null")
+      throw new Error("updatePinData: gate can not be null");
     }
-    const input = getPinData(gate, PinType.INPUT)
-    const output = getPinData(gate, PinType.OUTPUT)
-    const internal = getPinData(gate, PinType.INTERNAL)
-    setPinData({ input, output, internal })
+    const input = getPinData(gate, PinType.INPUT);
+    const output = getPinData(gate, PinType.OUTPUT);
+    const internal = getPinData(gate, PinType.INTERNAL);
+    setPinData({ input, output, internal });
   }, [])
 
   // parse hdl file contents into gate
   useEffect(() => {
-    if (!gateFilename || !userWorkspace) { return }
-    if (!gateFilename.endsWith(".hdl")) { return }
-    const gateName = gateFilename.slice(0, -4)
+    if (!gateFilename || !userWorkspace) { return; }
+    if (!gateFilename.endsWith(".hdl")) { return; }
+    const gateName = gateFilename.slice(0, -4);
     try {
-      controller.current.loadGate(gateName, userWorkspace)
-      updatePinData()
-      setStatus("Loaded successfully!")
+      controller.current.loadGate(gateName, userWorkspace);
+      updatePinData();
+      setStatus("Loaded successfully!");
     } catch (error) {
-      setStatus(`${error}`)
+      setStatus(`${error}`);
     }
-  }, [gateFilename, userWorkspace, updatePinData])
+  }, [gateFilename, userWorkspace, updatePinData]);
 
   // set up test script
   useEffect(() => {
     if (!testScript || !userWorkspace) { return; }
-    controller.current.loadScript(testScript, userWorkspace)
+    controller.current.loadScript(testScript, userWorkspace);
   }, [testScript, userWorkspace]);
 
   // step forward one time unit
@@ -90,26 +90,26 @@ export default function HardwareSimulatorUI() {
   }, []);
 
   const restart = useCallback(() => {
-    controller.current.restart()
-    updatePinData()
-  }, [updatePinData])
+    controller.current.restart();
+    updatePinData();
+  }, [updatePinData]);
 
   // set input pin
   const updateInputPin = useCallback(({ value, number, type }: PinUpdate) => {
     // can only update input pins
-    if (type !== PinType.INPUT) { return }
-    controller.current.setInputPin(number, parseInt(value) || 0)
-    updatePinData()
-  }, [updatePinData])
+    if (type !== PinType.INPUT) { return; }
+    controller.current.setInputPin(number, parseInt(value) || 0);
+    updatePinData();
+  }, [updatePinData]);
 
-  let hdl = "No hdl file"
+  let hdl = "No hdl file";
   if (userWorkspace && gateFilename) {
-    hdl = userWorkspace.get(gateFilename) ?? ""
+    hdl = userWorkspace.get(gateFilename) ?? "";
   }
 
-  userWorkspace?.set("default.tst", "repeat {\n    tick,\n    tock;\n}")
+  userWorkspace?.set("default.tst", "repeat {\n    tick,\n    tock;\n}");
   // userWorkspace?.set("default.tst", "tick;\ntock;\ntick;\n")
-  const displayScript = (testScript ? userWorkspace?.get(testScript) : null) ?? "No test found"
+  const displayScript = (testScript ? userWorkspace?.get(testScript) : null) ?? "No test found";
 
   return (
     <div id="hardwareSimulator">
